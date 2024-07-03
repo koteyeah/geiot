@@ -44,17 +44,26 @@ export default function SignUpScreen() {
   const [confirm, setConfirm] = useState(false)
 
   const onSubmit = handleSubmit(async (data) => {
-    await signUpWithEmail({
-      email: data.email,
-      password: data.password,
-    }).then((res: boolean) => {
-      if (res) {
-        console.log('ログイン成功')
-      } else {
-        console.log('ログイン失敗')
-      }
-    })
-  })
+    const result = await signUpWithEmail({ email: data.email, password: data.password });
+    if (result) {
+      toast({
+        title: '仮登録成功',
+        description: '確認用のメールを送信しました。メールを確認してください。',
+        status: 'success',
+        duration: 9000,
+        isClosable: true,
+      });
+      router.push('/signin');
+    } else {
+      toast({
+        title: '仮登録失敗',
+        description: '登録に失敗しました。再度お試しください。',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+  });
 
   const passwordClick = () => setPassword(!password)
   const confirmClick = () => setConfirm(!confirm)
@@ -71,6 +80,8 @@ export default function SignUpScreen() {
               </FormLabel>
               <Input
                 id='email'
+                type='email'
+                autoComplete='email'
                 {...register('email', {
                   required: '必須項目です',
                   maxLength: {
@@ -84,7 +95,6 @@ export default function SignUpScreen() {
                   },
                 })}
               />
-	      // エラーが表示される
               <FormErrorMessage>
                 {errors.email && errors.email.message}
               </FormErrorMessage>
@@ -94,8 +104,10 @@ export default function SignUpScreen() {
               <FormLabel htmlFor='password'>パスワード</FormLabel>
               <InputGroup size='md'>
                 <Input
-                  pr='4.5rem'
+                  id='password'
                   type={password ? 'text' : 'password'}
+                  autoComplete='new-password'
+                  pr='4.5rem'
                   {...register('password', {
                     required: '必須項目です',
                     minLength: {
@@ -119,7 +131,6 @@ export default function SignUpScreen() {
                   </Button>
                 </InputRightElement>
               </InputGroup>
-	      // エラーが表示される
               <FormErrorMessage>
                 {errors.password && errors.password.message}
               </FormErrorMessage>
@@ -129,8 +140,10 @@ export default function SignUpScreen() {
               <FormLabel htmlFor='confirm'>パスワード確認</FormLabel>
               <InputGroup size='md'>
                 <Input
-                  pr='4.5rem'
+                  id='confirm'
                   type={confirm ? 'text' : 'password'}
+                  autoComplete='new-password'
+                  pr='4.5rem'
                   {...register('confirm', {
                     required: '必須項目です',
                     minLength: {
@@ -157,7 +170,6 @@ export default function SignUpScreen() {
                   </Button>
                 </InputRightElement>
               </InputGroup>
-	      // エラーが表示される
               <FormErrorMessage>
                 {errors.confirm && errors.confirm.message}
               </FormErrorMessage>

@@ -79,7 +79,6 @@ export default function SignInScreen() {
                   },
                 })}
               />
-	      // エラーが表示される
               <FormErrorMessage>
                 {errors.email && errors.email.message}
               </FormErrorMessage>
@@ -109,7 +108,6 @@ export default function SignInScreen() {
                   </Button>
                 </InputRightElement>
               </InputGroup>
-	      // エラーが表示される
               <FormErrorMessage>
                 {errors.password && errors.password.message}
               </FormErrorMessage>

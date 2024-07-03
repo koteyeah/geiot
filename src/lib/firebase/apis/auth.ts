@@ -1,92 +1,74 @@
 import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-  } from 'firebase/auth'
-  import { getFirestore, doc, setDoc } from 'firebase/firestore';
-  import { auth, db } from '../../../lib/firebase/config'
-  
-  /**
-   * EmailとPasswordでサインイン
-   * @param email
-   * @param password
-   * @returns Promise<boolean>
-   */
-  export const signInWithEmail = async (args: {
-    email: string
-    password: string
-  }): Promise<boolean> => {
-    let result: boolean = false
-    try {
-      const user = await signInWithEmailAndPassword(
-        auth,
-        args.email,
-        args.password
-      )
-  
-      if (user) {
-        result = true
-      }
-    } catch (error) {
-      result = false
-      console.log(error)
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  sendEmailVerification,
+} from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../../../lib/firebase/config';
+
+/**
+ * EmailとPasswordでサインイン
+ * @param email
+ * @param password
+ * @returns Promise<boolean>
+ */
+export const signInWithEmail = async (args: {
+  email: string;
+  password: string;
+}): Promise<boolean> => {
+  let result: boolean = false;
+  try {
+    const user = await signInWithEmailAndPassword(auth, args.email, args.password);
+
+    if (user) {
+      result = true;
     }
-    return result
+  } catch (error) {
+    result = false;
+    console.log(error);
   }
-  
-  /**
-   * EmailとPasswordでサインアップ
-   * @param username
-   * @param email
-   * @param password
-   * @returns Promise<boolean>
-   */
-  export const signUpWithEmail = async (args: {
-    email: string
-    password: string
-  }): Promise<boolean> => {
-    let result: boolean = false
-    try {
-      const user = await createUserWithEmailAndPassword(
-        auth,
-        args.email,
-        args.password
-      ).then(async (userCredential) => {
-        /** thenから追加します */
-        /** cloud firestoreのコレクション */
-        const colRef = doc(db, 'users', userCredential.user.uid)
-        /** document追加 */
-        await setDoc(colRef, {
-          uid: userCredential.user.uid,
-          email: userCredential.user.email,
-        })
-        return userCredential.user
-      })
-      if (user) {
-        result = true
-      }
-    } catch (error) {
-      result = false
-      console.log(error)
+  return result;
+};
+
+/**
+ * EmailとPasswordでサインアップ
+ * @param email
+ * @param password
+ * @returns Promise<boolean>
+ */
+export const signUpWithEmail = async (args: {
+  email: string;
+  password: string;
+}): Promise<boolean> => {
+  let result: boolean = false;
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, args.email, args.password);
+    const user = userCredential.user;
+
+    if (user) {
+      // Firestoreにユーザー情報を保存
+      const colRef = doc(db, 'users', user.uid);
+      await setDoc(colRef, {
+        uid: user.uid,
+        email: user.email,
+        createdAt: new Date().toISOString(),
+      });
+
+      // メールアドレス確認のメールを送信
+      await sendEmailVerification(user);
+
+      result = true;
     }
-    return result
+  } catch (error) {
+    // エラーオブジェクトを適切にキャスト
+    if (error instanceof Error) {
+      console.error('Error during sign up:', error);
+      console.error('Error code:', error.name);
+      console.error('Error message:', error.message);
+    } else {
+      console.error('Unknown error during sign up:', error);
+    }
   }
-  
-  /**
-   * ログアウト処理
-   * @returns Promise<boolean>
-   */
-  export const logout = async (): Promise<boolean> => {
-    let result: boolean = false
-  
-    await signOut(auth)
-      .then(() => {
-        result = true
-      })
-      .catch((error) => {
-        console.log(error)
-        result = false
-      })
-  
-    return result
-  }
+  return result;
+};
