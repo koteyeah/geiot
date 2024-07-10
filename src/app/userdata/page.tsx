@@ -1,8 +1,10 @@
-'use client'
-import { useEffect, useState } from 'react';
-import { db, auth } from '../../lib/firebase/config'; // Firebase configファイルをインポート
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { db, auth } from '../../lib/firebase/config';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/navigation'; // 修正: useRouterのimportをnext/routerからnext/navigationへ変更
 import {
   Box,
   Heading,
@@ -17,7 +19,6 @@ import {
   FormLabel,
   Input,
   Select,
-  Stack,
 } from '../../common/design';
 
 // ユーザーのプロフィールデータの型を定義
@@ -28,13 +29,14 @@ type ProfileData = {
   laboratory: string;
   studentNumber: string;
   phoneNumber: string;
-  year: string; // 学年
-  smoking: string; // 喫煙
-  japaneseProficiency: string; // 日本語可・否
-  driverProfile?: string; // ドライバープロフィール
+  year: string;
+  smoking: string;
+  japaneseProficiency: string;
+  driverProfile?: 'T' | 'F'; // ドライバープロフィールは 'T' または 'F' のいずれか
 };
 
 const ProfilePage = () => {
+  const router = useRouter(); // useRouterを使ってNext.jsのルーターを取得する
   const [userUid, setUserUid] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -52,20 +54,18 @@ const ProfilePage = () => {
         }
       });
     };
-
     fetchUser();
   }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!userUid) return;
-
       try {
         const docRef = doc(db, 'Users', userUid, 'Profile', 'Info');
         const docSnap = await getDoc(docRef);
-
         if (docSnap.exists()) {
-          setProfile(docSnap.data() as ProfileData);
+          const fetchedProfile = docSnap.data() as ProfileData;
+          setProfile(fetchedProfile);
         } else {
           setError('プロフィール情報が見つかりません。');
         }
@@ -76,13 +76,11 @@ const ProfilePage = () => {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [userUid]);
 
   const handleSave = async () => {
     if (!userUid || !profile) return;
-
     try {
       const docRef = doc(db, 'Users', userUid, 'Profile', 'Info');
       await setDoc(docRef, profile, { merge: true });
@@ -91,6 +89,10 @@ const ProfilePage = () => {
       console.error("Error saving profile data: ", err);
       setError('プロフィール情報の保存中にエラーが発生しました。');
     }
+  };
+
+  const handleNavigateToUserData1 = () => {
+    router.push('/userdata1'); // useRouterを使って画面遷移
   };
 
   if (loading) {
@@ -199,13 +201,19 @@ const ProfilePage = () => {
               </FormControl>
               <FormControl>
                 <FormLabel>ドライバープロフィール</FormLabel>
-                <Input
+                <Select
                   value={profile.driverProfile || ''}
-                  onChange={(e) => setProfile({ ...profile, driverProfile: e.target.value })}
-                />
+                  onChange={(e) => setProfile({ ...profile, driverProfile: e.target.value as 'T' | 'F' })}
+                >
+                  <option value="登録済">登録済</option>
+                  <option value="未登録">未登録</option>
+                </Select>
               </FormControl>
               <Button onClick={handleSave} colorScheme="teal">
                 保存
+              </Button>
+              <Button onClick={handleNavigateToUserData1} colorScheme="teal">
+                DriverProfileへ
               </Button>
             </VStack>
           ) : (
