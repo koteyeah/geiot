@@ -3,7 +3,6 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-
 import {
   Button,
   Flex,
@@ -41,18 +40,26 @@ export default function SignInScreen() {
   const [show, setShow] = useState<boolean>(false)
 
   const onSubmit = handleSubmit(async (data) => {
-    // バリデーションチェック
-    await signInWithEmail({
-      email: data.email,
-      password: data.password,
-    }).then((res: boolean) => {
-      if (res) {
-        console.log('ログイン成功')
-      } else {
-        console.log('ログイン失敗')
+    try {
+      const result = await signInWithEmail({ email: data.email, password: data.password });
+      if (result === 'home') {
+        console.log('Navigating to home');
+        router.push('/home');
+      } else if (result === 'profile') {
+        console.log('Navigating to profile');
+        router.push('/profile');
       }
-    })
-  })
+    } catch (error) {
+      toast({
+        title: 'サインイン失敗',
+        description: 'サインインに失敗しました。再度お試しください。',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+  });
+
   return (
     <Flex
       flexDirection='column'
@@ -71,6 +78,7 @@ export default function SignInScreen() {
               </FormLabel>
               <Input
                 id='email'
+                autoComplete='email'
                 {...register('email', {
                   required: '必須項目です',
                   maxLength: {
@@ -88,8 +96,10 @@ export default function SignInScreen() {
               <FormLabel htmlFor='password'>パスワード</FormLabel>
               <InputGroup size='md'>
                 <Input
+                  id='password'
                   pr='4.5rem'
                   type={show ? 'text' : 'password'}
+                  autoComplete='current-password'
                   {...register('password', {
                     required: '必須項目です',
                     minLength: {

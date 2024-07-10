@@ -4,32 +4,37 @@ import {
   signOut,
   sendEmailVerification,
 } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../../lib/firebase/config';
 
 /**
  * EmailとPasswordでサインイン
  * @param email
  * @param password
- * @returns Promise<boolean>
+ * @returns Promise<'home' | 'profile'>
  */
 export const signInWithEmail = async (args: {
-  email: string;
-  password: string;
-}): Promise<boolean> => {
-  let result: boolean = false;
+  email: string
+  password: string
+}): Promise<'home' | 'profile'> => {
   try {
-    const user = await signInWithEmailAndPassword(auth, args.email, args.password);
+    const userCredential = await signInWithEmailAndPassword(auth, args.email, args.password);
+    const user = userCredential.user;
 
-    if (user) {
-      result = true;
+    // Firestoreからプロフィールデータを取得
+    const profileDoc = await getDoc(doc(db, 'Users', user.uid, 'Profile', 'Info'));
+
+    if (profileDoc.exists()) {
+      return 'home';
+    } else {
+      return 'profile';
     }
   } catch (error) {
-    result = false;
-    console.log(error);
+    console.error('Error signing in: ', error);
+    throw new Error('サインインに失敗しました。');
   }
-  return result;
 };
+
 
 /**
  * EmailとPasswordでサインアップ
