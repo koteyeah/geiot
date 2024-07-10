@@ -11,29 +11,30 @@ import { auth, db } from '../../../lib/firebase/config';
  * EmailとPasswordでサインイン
  * @param email
  * @param password
- * @returns Promise<string> - 'home' か 'profile' のいずれかを返す
+ * @returns Promise<'home' | 'profile'>
  */
-export const signInWithEmail = async (args: { email: string, password: string }): Promise<string> => {
+export const signInWithEmail = async (args: {
+  email: string
+  password: string
+}): Promise<'home' | 'profile'> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, args.email, args.password);
     const user = userCredential.user;
 
-    if (user) {
-      const docRef = doc(db, 'users', user.uid, 'Profile', 'profile');
-      const docSnap = await getDoc(docRef);
+    // Firestoreからプロフィールデータを取得
+    const profileDoc = await getDoc(doc(db, 'Users', user.uid, 'Profile', 'Info'));
 
-      if (docSnap.exists()) {
-        return 'home';
-      } else {
-        return 'profile';
-      }
+    if (profileDoc.exists()) {
+      return 'home';
+    } else {
+      return 'profile';
     }
   } catch (error) {
-    console.error('Error during sign in:', error);
-    throw new Error('Sign in failed');
+    console.error('Error signing in: ', error);
+    throw new Error('サインインに失敗しました。');
   }
-  throw new Error('User not found');
 };
+
 
 /**
  * EmailとPasswordでサインアップ
