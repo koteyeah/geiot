@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import {
@@ -17,7 +17,7 @@ import {
   Text,
 } from '../../common/design'
 import { db, auth } from '../../lib/firebase/config'
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore'
 
 // フォームで使用する変数の型を定義
 type formInputs = {
@@ -36,50 +36,73 @@ type formInputs = {
  * @description ユーザーがドライバー登録を行う画面
  */
 export default function DriverRegistrationScreen() {
-    const { handleSubmit, register, formState: { errors, isSubmitting } } = useForm<formInputs>()
-    const router = useRouter();
+  const { handleSubmit, register, formState: { errors, isSubmitting } } = useForm<formInputs>()
+  const router = useRouter()
+  const [isDriverProfileRegistered, setIsDriverProfileRegistered] = useState(true)
   
-    const onSubmit = handleSubmit(async (data) => {
-      const user = auth.currentUser;
+  useEffect(() => {
+    const checkDriverProfile = async () => {
+      const user = auth.currentUser
       if (user) {
-        const userUid = user.uid;
-  
-        // 出発時刻を統合して1つのフィールドとして保存
-        const start_time = new Date(
-          parseInt(data.year),
-          parseInt(data.month) - 1,
-          parseInt(data.day),
-          parseInt(data.hour),
-          parseInt(data.minute)
-        ).toISOString();
-  
-        const driverData = {
-          driver: userUid,
-          goal_spot: data.goal_spot,
-          remarks: data.remarks,
-          start_spot: data.start_spot,
-          start_time: start_time,
-          status: "募集中", // 初期ステータスを設定
-          actual_goal_time: null,
-          actual_start_time: null,
-          driver_feedback: null,
-          driver_rate: null,
-          passenger: null,
-          passenger_feedback: null,
-          passenger_rate: null,
-        };
-  
-        const driverRef = doc(db, 'ainories', userUid); // ドライバーUIDをキーとしてドキュメントを作成
-  
-        // データが既に存在する場合は更新し、存在しない場合は新規作成
-        await setDoc(driverRef, driverData, { merge: true });
-  
-        console.log('Driver data submitted and saved:', driverData);
-        router.push('/home');  // 登録後に home に遷移する
-      } else {
-        console.error('User not logged in');
+        const userUid = user.uid
+        const docRef = doc(db, 'Users', userUid, 'Profile', 'Info')
+        const docSnap = await getDoc(docRef)
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data()
+          if (data.driverProfile === "未登録") {
+            setIsDriverProfileRegistered(false)
+          }
+        } else {
+          setIsDriverProfileRegistered(false)
+        }
       }
-    });
+    }
+    
+    checkDriverProfile()
+  }, [])
+
+  const onSubmit = handleSubmit(async (data) => {
+    const user = auth.currentUser
+    if (user) {
+      const userUid = user.uid
+
+      // 出発時刻を統合してFirebaseのTimestampとして保存
+      const start_time = Timestamp.fromDate(new Date(
+        parseInt(data.year),
+        parseInt(data.month) - 1,
+        parseInt(data.day),
+        parseInt(data.hour),
+        parseInt(data.minute)
+      ))
+
+      const driverData = {
+        driver: userUid,
+        goal_spot: data.goal_spot,
+        remarks: data.remarks,
+        start_spot: data.start_spot,
+        start_time: start_time,
+        status: "募集中", // 初期ステータスを設定
+        actual_goal_time: null,
+        actual_start_time: null,
+        driver_feedback: null,
+        driver_rate: null,
+        passenger: null,
+        passenger_feedback: null,
+        passenger_rate: null,
+      }
+
+      const driverRef = doc(db, 'ainories', userUid) // ドライバーUIDをキーとしてドキュメントを作成
+
+      // データが既に存在する場合は更新し、存在しない場合は新規作成
+      await setDoc(driverRef, driverData, { merge: true })
+
+      console.log('Driver data submitted and saved:', driverData)
+      router.push('/home')  // 登録後に home に遷移する
+    } else {
+      console.error('User not logged in')
+    }
+  })
 
   return (
     <Flex height='100vh' justifyContent='center' alignItems='center'>
@@ -253,9 +276,13 @@ export default function DriverRegistrationScreen() {
                 borderColor: 'transparent',
                 boxShadow: '0 7px 10px rgba(0, 0, 0, 0.3)',
               }}
+              isDisabled={!isDriverProfileRegistered}
             >
               登録 (Register)
             </Button>
+            {!isDriverProfileRegistered && (
+              <Text color='red.500'>ドライバー情報が未登録です</Text>
+            )}
           </VStack>
         </form>
       </VStack>
