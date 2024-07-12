@@ -119,7 +119,7 @@ export default function Page() {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [status, userType, ainoriData]);
   const AinoriComponent = ({
     status,
     userType,
