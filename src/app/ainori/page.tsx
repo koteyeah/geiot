@@ -6,7 +6,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/src/lib/firebase/config";
 import { getDoc, doc, DocumentData } from "firebase/firestore";
 import { getPositionDifference } from "./utils";
-import { Router } from "next/router";
 
 export default function Page() {
   const [userData, setUser] = useState<DocumentData | null>(null);
@@ -132,6 +131,13 @@ export default function Page() {
     otherUserData: DocumentData | null;
     ainoriData: DocumentData | null;
   }) => {
+    if (status == null)
+      return (
+        <Heading>
+          相乗り処理は行われていません！<br></br>
+          掲示板から相乗りを利用してみよう。
+        </Heading>
+      );
     return (
       <Flex align="center" justify="center" height="100vh">
         <VStack spacing={5}>
