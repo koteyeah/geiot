@@ -11,50 +11,51 @@ import {
   Text,
 } from "@chakra-ui/react";
 
-export const defaultSteps = [
-  { title: "成立", description: "相乗りが成立しました" },
-  { title: "運転中", description: "目的地に向かっています" },
-  { title: "到着", description: "目的地に到着しました" },
-];
+export const defaultSteps = ["成立", "相乗り中", "到着"];
 
 interface StepperComponentProps {
-  steps?: { title: string; description: string }[];
-  activeStep: number;
-  titleFontSize?: string; // タイトルの文字サイズを指定するプロパティ
+  steps?: string[];
+  activeStep: string;
 }
 
 const StepperComponent: React.FC<StepperComponentProps> = ({
   steps = defaultSteps,
   activeStep,
-  titleFontSize = "sm",
 }) => {
-  const { activeStep: index } = useSteps({
-    index: activeStep,
-    count: steps.length,
-  });
+  let statusIndex = 0;
+  switch (activeStep) {
+    case "成立":
+      statusIndex = 0;
+      break;
+    case "相乗り中":
+      statusIndex = 1;
+      break;
+    case "到着":
+      statusIndex = 2;
+      break;
+  }
 
   return (
-    <Stepper index={index}>
-      {steps.map((step, index) => (
-        <Step key={index}>
+    <Stepper index={statusIndex + 1}>
+      {steps.map((step) => (
+        <Step key={step}>
           <StepIndicator>
-            {index === 0 && (
+            {step === "成立" && (
               <Image src="/icons/seiritsu.svg" alt="Seiritsu" boxSize="30px" />
             )}
-            {index === 1 && (
+            {step === "相乗り中" && (
               <Image src="/icons/car.svg" alt="Car" boxSize="30px" />
             )}
-            {index === 2 && (
+            {step === "到着" && (
               <Image src="/icons/arrive.svg" alt="Arrive" boxSize="30px" />
             )}
           </StepIndicator>
           <Box flexShrink="0" textAlign="center">
             <StepTitle>
-              <Text fontSize={titleFontSize}>{step.title}</Text>
+              <Text fontSize={"sm"}>{step}</Text>
             </StepTitle>
-            <StepDescription>{step.description}</StepDescription>
           </Box>
-          {index < steps.length - 1 && <StepSeparator />}
+          {statusIndex < steps.length - 1 && <StepSeparator />}
         </Step>
       ))}
     </Stepper>

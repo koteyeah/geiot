@@ -26,7 +26,7 @@ export default function Page() {
   const [ainoriData, setAinori] = useState<DocumentData | null>(null);
   const [ainoriKey, setAinoriKey] = useState<string>("");
   const [status, setStatus] = useState<
-    "募集中" | "成立中" | "相乗り中" | "相乗り終了" | null
+    "募集中" | "成立" | "相乗り中" | "到着" | null
   >(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userType, setUserType] = useState<"ドライバー" | "乗客" | null>(null);
@@ -87,9 +87,9 @@ export default function Page() {
       if (isNear) {
         console.log("目的地から500m以内です。相乗りを完了します。");
         alert("目的地から500m以内です。相乗りを完了します。");
-
+        setStatus("到着");
         await updateDoc(doc(db, "ainories", ainoriKey), {
-          status: "相乗り終了",
+          status: "到着",
         });
         await updateDoc(doc(db, "Users", userKey), {
           status: null,
@@ -133,7 +133,7 @@ export default function Page() {
                   ainoriData.driver === user.uid ? "ドライバー" : "乗客"
                 );
 
-                if (status === "成立中" || status === "相乗り中") {
+                if (status === "成立" || status === "相乗り中") {
                   switch (userType) {
                     case "ドライバー":
                       const passengerDoc = await getDoc(
@@ -190,20 +190,41 @@ export default function Page() {
           相乗り処理は行われていません！<br></br>
           掲示板から相乗りを利用してみよう。
         </Heading>
+        // <StepperComponent activeStep={"成立"} />
+      );
+    }
+    if (status == "募集中") {
+      return (
+        <>
+          <Text>現在相乗りを募集しています。</Text>
+          <Text>ここに相乗り情報を表示。</Text>
+          <Button
+            onClick={async () => {
+              await deleteDoc(doc(db, "ainories", ainoriKey));
+              await updateDoc(doc(db, "Users", userKey), {
+                status: null,
+              });
+              if (otherUserKey != "") {
+                await updateDoc(doc(db, "Users", otherUserKey), {
+                  status: null,
+                });
+              }
+              alert("取引をキャンセルしました。");
+            }}
+          >
+            取引をキャンセル
+          </Button>
+        </>
       );
     } else {
       return (
         <Flex align="center" justify="center" height="100vh">
           <VStack spacing={5}>
-            {status && (
-              <Heading>ここにプログレスバー。現在の状態は{status}</Heading>
-            )}
-            {(status == "成立中" || status == "相乗り中") && (
+            {status && <StepperComponent activeStep={status} />}
+            {(status == "成立" || status == "相乗り中") && (
               <Text>ここに取引相手のプロフィールを表示</Text>
             )}
-            {status == "募集中" && <Text>現在相乗りを募集しています。</Text>}
-            {ainoriData && <Text>ここに相乗り情報を表示。</Text>}
-            {status == "成立中" && (
+            {status == "成立" && (
               <>
                 <Heading>
                   相乗りが成立しています。出発時刻に遅れないようにしましょう。
@@ -248,33 +269,30 @@ export default function Page() {
                 )}
               </>
             )}
-            {status == "相乗り終了" && userType == "乗客" && (
+            {status == "到着" && userType == "乗客" && (
               <>
-                <Heading>
-                  相乗りは完了しました！またのご利用お待ちしています！
-                </Heading>
+                <Heading>到着しました！またのご利用お待ちしています！</Heading>
                 <Text fontSize="3xl">別のページに移動してください</Text>
               </>
             )}
-            {status == "募集中" ||
-              (status == "成立中" && (
-                <Button
-                  onClick={async () => {
-                    await deleteDoc(doc(db, "ainories", ainoriKey));
-                    await updateDoc(doc(db, "Users", userKey), {
+            {status == "成立" && (
+              <Button
+                onClick={async () => {
+                  await deleteDoc(doc(db, "ainories", ainoriKey));
+                  await updateDoc(doc(db, "Users", userKey), {
+                    status: null,
+                  });
+                  if (otherUserKey != "") {
+                    await updateDoc(doc(db, "Users", otherUserKey), {
                       status: null,
                     });
-                    if (otherUserKey != "") {
-                      await updateDoc(doc(db, "Users", otherUserKey), {
-                        status: null,
-                      });
-                    }
-                    alert("取引をキャンセルしました。");
-                  }}
-                >
-                  取引をキャンセル
-                </Button>
-              ))}
+                  }
+                  alert("取引をキャンセルしました。");
+                }}
+              >
+                取引をキャンセル
+              </Button>
+            )}
           </VStack>
         </Flex>
       );
