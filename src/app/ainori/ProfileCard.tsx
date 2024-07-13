@@ -27,9 +27,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ name, date, time }) => (
     <VStack align="start" spacing={3} width="100%">
       <HStack justifyContent="space-between" spacing={1} mb={1} width="100%">
         <HStack spacing={1}>
-          {[...Array(5)].map((_, index) => (
+          {/* {[...Array(5)].map((_, index) => (
             // <Icon key={index} as={FaStar} w={4} h={4} color="black" />
-          ))}
+          ))} */}
         </HStack>
         <HStack justifyContent="space-between" mt={3} width="10%">
           <Image src="/icons/no_smoking.svg" alt="No Smoking" boxSize="30px" />
