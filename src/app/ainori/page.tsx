@@ -47,8 +47,22 @@ export default function Page() {
   const handleGetOffButton = async () => {
     if (isProcessing) return; // 処理中であれば何もしない
     isProcessing = true; // フラグを立てる
-    const destinationLat = 34.7249499;
-    const destinationLon = 135.7218884;
+    let destinationLat = 0;
+    let destinationLon = 0;
+    switch (ainoriData!.goal_spot) {
+      case "学研北生駒駅":
+        destinationLat = 34.7249652;
+        destinationLon = 135.7233898;
+        break;
+      case "学研奈良登美ヶ丘駅":
+        destinationLat = 34.7265719;
+        destinationLon = 135.752466;
+        break;
+      case "UR中登美第三団地":
+        destinationLat = 34.7167044;
+        destinationLon = 135.7444945;
+        break;
+    }
     try {
       const isNear = await getPositionDifference(
         destinationLat,
@@ -76,12 +90,14 @@ export default function Page() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
+          console.log("ユーザーが見つかりました" + user.uid);
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
             setUser(userData);
             const isAinori = userData!.isAinori;
             if (isAinori) {
+              console.log("相乗りが存在します" + isAinori);
               const ainoriDoc = await getDoc(doc(db, "ainories", isAinori));
               if (ainoriDoc.exists()) {
                 const ainoriData = ainoriDoc.data();
@@ -91,6 +107,7 @@ export default function Page() {
                   ainoriData.driver === user.uid ? "ドライバー" : "乗客"
                 );
               }
+              // 相手のユーザー情報を取得
               if (status == "成立中" || status == "相乗り中") {
                 switch (userType) {
                   case "ドライバー":
@@ -128,86 +145,90 @@ export default function Page() {
     otherUserData: DocumentData | null;
     ainoriData: DocumentData | null;
   }) => {
-    if (status == null)
+    // 相乗りを行っていない場合の出力
+    if (status == null) {
       return (
         <Heading>
           相乗り処理は行われていません！<br></br>
           掲示板から相乗りを利用してみよう。
         </Heading>
       );
-    return (
-      <Flex align="center" justify="center" height="100vh">
-        <VStack spacing={5}>
-          {status && (
-            <Heading>ここにプログレスバー。現在の状態は{status}</Heading>
-          )}
-          {(status == "成立中" || status == "相乗り中") && (
-            <Text>ここに取引相手のプロフィールを表示</Text>
-          )}
-          {status == "募集中" && <Text>現在相乗りを募集しています。</Text>}
-          {ainoriData && <Text>ここに相乗り情報を表示。</Text>}
-          {status == "成立中" && (
-            <>
-              <Heading>
-                相乗りが成立しています。出発時刻に遅れないようにしましょう。
-              </Heading>
-              {userType === "ドライバー" ? (
-                <Button
-                  onClick={() => {
-                    router.refresh();
-                  }}
-                >
-                  更新
-                </Button>
-              ) : (
-                <>
-                  <Text>ドライバーと合流したら乗車するを押してください。</Text>
-                  <Button onClick={handleRideButton}>乗車する</Button>
-                </>
-              )}
-            </>
-          )}
-          {status == "相乗り中" && (
-            <>
-              <Heading>
-                相乗り中です。目的地まで安全に相乗りを楽しんで！
-              </Heading>
-              {userType === "ドライバー" ? (
-                <Button
-                  onClick={() => {
-                    console.log("aaa");
-                    router.refresh();
-                  }}
-                >
-                  更新
-                </Button>
-              ) : (
-                <>
-                  <Text>目的地に到着したら降車するを押してください</Text>
-                  <Button onClick={handleGetOffButton}>降車する</Button>
-                </>
-              )}
-            </>
-          )}
-          {status == "相乗り終了" && userType == "乗客" && (
-            <>
-              <Heading>
-                相乗りは完了しました！またのご利用お待ちしています！
-              </Heading>
-              <Text fontSize="3xl">別のページに移動してください</Text>
-            </>
-          )}
-        </VStack>
-      </Flex>
-    );
+    } else {
+      return (
+        <Flex align="center" justify="center" height="100vh">
+          <VStack spacing={5}>
+            {status && (
+              <Heading>ここにプログレスバー。現在の状態は{status}</Heading>
+            )}
+            {(status == "成立中" || status == "相乗り中") && (
+              <Text>ここに取引相手のプロフィールを表示</Text>
+            )}
+            {status == "募集中" && <Text>現在相乗りを募集しています。</Text>}
+            {ainoriData && <Text>ここに相乗り情報を表示。</Text>}
+            {status == "成立中" && (
+              <>
+                <Heading>
+                  相乗りが成立しています。出発時刻に遅れないようにしましょう。
+                </Heading>
+                {userType === "ドライバー" ? (
+                  <Button
+                    onClick={() => {
+                      router.refresh();
+                    }}
+                  >
+                    更新
+                  </Button>
+                ) : (
+                  <>
+                    <Text>
+                      ドライバーと合流したら乗車するを押してください。
+                    </Text>
+                    <Button onClick={handleRideButton}>乗車する</Button>
+                  </>
+                )}
+              </>
+            )}
+            {status == "相乗り中" && (
+              <>
+                <Heading>
+                  相乗り中です。目的地まで安全に相乗りを楽しんで！
+                </Heading>
+                {userType === "ドライバー" ? (
+                  <Button
+                    onClick={() => {
+                      console.log("aaa");
+                      router.refresh();
+                    }}
+                  >
+                    更新
+                  </Button>
+                ) : (
+                  <>
+                    <Text>目的地に到着したら降車するを押してください</Text>
+                    <Button onClick={handleGetOffButton}>降車する</Button>
+                  </>
+                )}
+              </>
+            )}
+            {status == "相乗り終了" && userType == "乗客" && (
+              <>
+                <Heading>
+                  相乗りは完了しました！またのご利用お待ちしています！
+                </Heading>
+                <Text fontSize="3xl">別のページに移動してください</Text>
+              </>
+            )}
+          </VStack>
+        </Flex>
+      );
+    }
   };
-
   return (
     <AinoriComponent
       status={status}
       userType={userType}
-      otherUserData={null}
-      ainoriData={null}
+      otherUserData={otherUserData}
+      ainoriData={ainoriData}
     />
   );
 }
