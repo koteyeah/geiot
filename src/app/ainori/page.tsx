@@ -4,11 +4,13 @@ import { Text, Button, Flex, Heading, VStack } from "../../common/design";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/src/lib/firebase/config";
-import { getDoc, doc, DocumentData } from "firebase/firestore";
+import { getDoc, doc, DocumentData, updateDoc } from "firebase/firestore";
 import { getPositionDifference } from "./utils";
+import { update } from "firebase/database";
 
 export default function Page() {
   const [userData, setUser] = useState<DocumentData | null>(null);
+  const [userKey, setUserKey] = useState<string>("");
   const [otherUserData, setOtherUser] = useState<DocumentData | null>(null);
   const [otherUserKey, setOtherUserKey] = useState<string>("");
   const [ainoriData, setAinori] = useState<DocumentData | null>(null);
@@ -33,7 +35,9 @@ export default function Page() {
         console.log("出発地から500m以内です。相乗りを開始します。");
         alert("出発地から500m以内です。相乗りを開始します。");
         setStatus("相乗り中");
-        // データベースの処理を書く
+        await updateDoc(doc(db, "ainories", ainoriKey), {
+          status: "相乗り中",
+        });
       } else {
         console.log("出発地から離れています。");
         alert("出発地から離れています。");
@@ -66,6 +70,7 @@ export default function Page() {
         destinationLon = 135.7444945;
         break;
     }
+    console.log(destinationLat, destinationLon);
     try {
       const isNear = await getPositionDifference(
         destinationLat,
@@ -75,7 +80,15 @@ export default function Page() {
         console.log("目的地から500m以内です。相乗りを完了します。");
         alert("目的地から500m以内です。相乗りを完了します。");
         setStatus("相乗り終了");
-        // データベースの処理を記述
+        await updateDoc(doc(db, "ainories", ainoriKey), {
+          status: "相乗り終了",
+        });
+        await updateDoc(doc(db, "Users", userKey), {
+          status: null,
+        });
+        await updateDoc(doc(db, "Users", otherUserKey), {
+          status: null,
+        });
       } else {
         console.log("出発地から離れています。");
         alert("出発地から離れています。");
@@ -94,6 +107,7 @@ export default function Page() {
       if (user) {
         try {
           console.log("ユーザーが見つかりました" + user.uid);
+          setUserKey(user.uid);
           const userDoc = await getDoc(doc(db, "Users", user.uid));
           if (userDoc.exists()) {
             console.log("ユーザーテーブルを発見しました。");
@@ -101,7 +115,7 @@ export default function Page() {
             setUser(userData);
             const isAinori = userData!.status;
             if (isAinori) {
-              console.log("相乗りが存在します" + isAinori);
+              console.log("相乗り処理が存在します。" + isAinori);
               const ainoriDoc = await getDoc(doc(db, "ainories", isAinori));
               if (ainoriDoc.exists()) {
                 const ainoriData = ainoriDoc.data();
@@ -116,6 +130,7 @@ export default function Page() {
               if (status == "成立中" || status == "相乗り中") {
                 switch (userType) {
                   case "ドライバー":
+                    console.log("ユーザーはドライバーで登録しています");
                     const passengerDoc = await getDoc(
                       doc(db, "users", ainoriData!.passenger)
                     );
@@ -125,6 +140,7 @@ export default function Page() {
                     }
                     break;
                   case "乗客":
+                    console.log("乗客で登録しています。");
                     const driverDoc = await getDoc(
                       doc(db, "users", ainoriData!.driver)
                     );
@@ -134,6 +150,7 @@ export default function Page() {
                     }
                     break;
                 }
+                console.log("取引相手のIDは" + otherUserKey);
               }
             }
           }
@@ -150,13 +167,13 @@ export default function Page() {
     userType,
     otherUserData,
     ainoriData,
-    isLoaded,
+    isLoading,
   }: {
     status: string | null;
     userType: string | null;
     otherUserData: DocumentData | null;
     ainoriData: DocumentData | null;
-    isLoaded: Boolean;
+    isLoading: Boolean;
   }) => {
     if (isLoading) return <Heading>loading...</Heading>;
 
@@ -244,6 +261,7 @@ export default function Page() {
       userType={userType}
       otherUserData={otherUserData}
       ainoriData={ainoriData}
+      isLoading={isLoading}
     />
   );
 }
