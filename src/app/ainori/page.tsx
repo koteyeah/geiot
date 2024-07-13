@@ -4,7 +4,13 @@ import { Text, Button, Flex, Heading, VStack } from "../../common/design";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/src/lib/firebase/config";
-import { getDoc, doc, DocumentData, updateDoc } from "firebase/firestore";
+import {
+  getDoc,
+  doc,
+  DocumentData,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import { getPositionDifference } from "./utils";
 import { update } from "firebase/database";
 
@@ -250,6 +256,25 @@ export default function Page() {
                 <Text fontSize="3xl">別のページに移動してください</Text>
               </>
             )}
+            {status == "募集中" ||
+              (status == "成立中" && (
+                <Button
+                  onClick={async () => {
+                    await deleteDoc(doc(db, "ainories", ainoriKey));
+                    await updateDoc(doc(db, "Users", userKey), {
+                      status: null,
+                    });
+                    if (otherUserKey != "") {
+                      await updateDoc(doc(db, "Users", otherUserKey), {
+                        status: null,
+                      });
+                    }
+                    alert("取引をキャンセルしました。");
+                  }}
+                >
+                  取引をキャンセル
+                </Button>
+              ))}
           </VStack>
         </Flex>
       );
