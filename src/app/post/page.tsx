@@ -17,7 +17,7 @@ import {
   Text,
 } from '../../common/design'
 import { db, auth } from '../../lib/firebase/config'
-import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore'
+import { doc, getDoc, addDoc, Timestamp, collection, updateDoc } from 'firebase/firestore'
 
 // フォームで使用する変数の型を定義
 type formInputs = {
@@ -92,10 +92,15 @@ export default function DriverRegistrationScreen() {
         passenger_rate: null,
       }
 
-      const driverRef = doc(db, 'ainories', userUid) // ドライバーUIDをキーとしてドキュメントを作成
+      const driverCollectionRef = collection(db, 'ainories') // コレクションを指定
+      
+      // 新しいドキュメントを追加し、そのドキュメントIDを取得
+      const docRef = await addDoc(driverCollectionRef, driverData)
+      const docId = docRef.id
 
-      // データが既に存在する場合は更新し、存在しない場合は新規作成
-      await setDoc(driverRef, driverData, { merge: true })
+      // UsersコレクションのUUIDドキュメントのstatusフィールドにainoriesのドキュメントIDを更新
+      const userProfileRef = doc(db, 'Users', userUid)
+      await updateDoc(userProfileRef, { status: docId })
 
       console.log('Driver data submitted and saved:', driverData)
       router.push('/home')  // 登録後に home に遷移する
