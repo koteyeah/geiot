@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { db, auth } from '../../lib/firebase/config'; // Firebase configファイルをインポート
-import { collection, getDocs, doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc, runTransaction,Timestamp } from 'firebase/firestore';
 import {
     Box,
     Heading,
@@ -13,9 +13,12 @@ import {
     HStack,
     Button,
     Spacer,
+    useToast,
 } from '@chakra-ui/react';
 import { format } from 'date-fns';
 import { onAuthStateChanged } from 'firebase/auth';
+import { set } from 'firebase/database';
+import { useRouter } from 'next/navigation'
 
 type AinoriData = {
     actual_goal_time: Timestamp | null;
@@ -72,22 +75,34 @@ const PostListPage: React.FC = () => {
     const [posts, setPosts] = useState<(AinoriData & { id: string, driverData?: UserData, driverInfo?: DriverData })[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState<string | null>(null); // 追加
-    const [userId, setUserId] = useState<string | null>(null); // 追加
+    const [isSubmitting, setIsSubmitting] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [userStatus, setUserStatus] = useState<string | null>(null);
+    const router = useRouter();
+    const toast = useToast();
 
     useEffect(() => {
-        // ユーザーIDの取得
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 setUserId(user.uid);
+                // ユーザーのstatusを取得
+                const userDocRef = doc(db, 'Users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    setUserStatus(userDoc.data().status || null);
+                }
             } else {
                 setUserId(null);
+                setUserStatus(null);
             }
         });
 
-        // クリーンアップ
         return () => unsubscribe();
     }, []);
+
+    useEffect(() => {
+        console.log('posts:', posts)
+    }, [posts]);
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -143,10 +158,36 @@ const PostListPage: React.FC = () => {
         try {
             setIsSubmitting(postId); // ボタンの状態をローディングに設定
             const postDocRef = doc(db, 'ainories', postId);
-            await updateDoc(postDocRef, {
-                passenger: userId // ここに実際のユーザーIDを設定
+            const userDocRef = doc(db, 'Users', userId);
+            let driverUsername = '';
+            const postSnapshot = await getDoc(postDocRef);
+            if (postSnapshot.exists()) {
+                const postData = postSnapshot.data() as AinoriData;
+                if (postData.driver) {
+                    const driverDocRef = doc(db, 'Users', postData.driver, 'Profile', 'Info');
+                    const driverDoc = await getDoc(driverDocRef);
+                    if (driverDoc.exists()) {
+                        const driverData = driverDoc.data() as UserData;
+                        driverUsername = driverData.username;
+                    }
+                }
+            }
+            await runTransaction(db, async (transaction) => {
+                // ainoriesテーブルの更新
+                transaction.update(postDocRef, { passenger: userId, status: '成立中' });
+                // Usersテーブルの更新
+                transaction.update(userDocRef, { status: postId });
+                setUserStatus(postId);
             });
             console.log(`Updated passenger for post ID: ${postId}`);
+            toast({
+                title: "マッチが成立しました！",
+                description: `${driverUsername}さんとのマッチが成功しました。`,
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+            });
+            router.push('/home');
         } catch (err) {
             console.error(`Error updating passenger for post ID ${postId}: `, err);
         } finally {
@@ -178,64 +219,76 @@ const PostListPage: React.FC = () => {
             <VStack spacing="5" alignItems="left" width="full">
                 <Heading>ポスト一覧</Heading>
                 {posts.length > 0 ? (
-                    posts.map((post, index) => (
-                        <Box key={index} p="5" shadow="md" borderWidth="1px" width="100%" maxWidth="1000px" margin="auto">
-                            <HStack>
-                                <Box flex="3.5" borderRight="1px solid #ccc" pr="4">
-                                    <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
-                                        {post.driverData?.username}
-                                    </Text>
-                                    <HStack justifyContent="space-between">
-                                        <Box flex="0.75" textAlign="center">
-                                            <Text><strong>{post.driverData?.gender}</strong></Text>
+                posts
+                    .filter(post => post.status === '募集中') // "募集中" 状態のポストをフィルタリング
+                    .length > 0 ? (
+                        posts
+                            .filter(post => post.status === '募集中') // "募集中" 状態のポストを再度フィルタリング
+                            .map((post, index) => (
+                                <Box key={index} p="5" shadow="md" borderWidth="1px" width="100%" maxWidth="1000px" margin="auto">
+                                    <HStack>
+                                        <Box flex="3.5" borderRight="1px solid #ccc" pr="4">
+                                            <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
+                                                {post.driverData?.username}
+                                            </Text>
+                                            <HStack justifyContent="space-between">
+                                                <Box flex="0.75" textAlign="center">
+                                                    <Text><strong>{post.driverData?.gender}</strong></Text>
+                                                </Box>
+                                                <Box flex="0.75" textAlign="center">
+                                                    <Text><strong>{post.driverData?.year}</strong></Text>
+                                                </Box>
+                                            </HStack>
+                                            <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
+                                                {post.driverData?.laboratory}
+                                            </Text>
+                                            <HStack justifyContent="space-between">
+                                                <Box flex="0.75" textAlign="center">
+                                                    <Text><strong>日本語可否:</strong> {post.driverData?.japaneseProficiency}</Text>
+                                                </Box>
+                                                <Box flex="0.75" textAlign="center">
+                                                    <Text><strong>喫煙:</strong> {post.driverData?.smoking}</Text>
+                                                </Box>
+                                            </HStack>
                                         </Box>
-                                        <Box flex="0.75" textAlign="center">
-                                            <Text><strong>{post.driverData?.year}</strong></Text>
-                                        </Box>
-                                    </HStack>
-                                    <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
-                                        {post.driverData?.laboratory}
-                                    </Text>
-                                    <HStack justifyContent="space-between">
-                                        <Box flex="0.75" textAlign="center">
-                                            <Text><strong>日本語可否:</strong> {post.driverData?.japaneseProficiency}</Text>
-                                        </Box>
-                                        <Box flex="0.75" textAlign="center">
-                                            <Text><strong>喫煙:</strong> {post.driverData?.smoking}</Text>
+                                        <Box flex="6.5" pl="4">
+                                            <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}>
+                                                {post.start_time instanceof Timestamp ? formatDate(post.start_time) : post.start_time.toString()}
+                                            </Text>
+                                            <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}><strong>{post.start_spot} - {post.goal_spot}</strong></Text>
+                                            <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}><strong>車: {post.driverInfo?.carType}</strong></Text>
+                                            <Text><strong>備考:</strong> {post.remarks}</Text>
+                                            <Box display="flex" justifyContent="flex-end">
+                                                <Button
+                                                    marginTop='4'
+                                                    color='white'
+                                                    bg='teal.400'
+                                                    isLoading={isSubmitting === post.id}
+                                                    onClick={() => handleRegisterClick(post.id)}
+                                                    paddingX='auto'
+                                                    _hover={{
+                                                        borderColor: 'transparent',
+                                                        boxShadow: '0 7px 10px rgba(0, 0, 0, 0.3)',
+                                                    }}
+                                                    isDisabled={userStatus !== null}
+                                                    _disabled={{
+                                                        bg: 'gray.400', 
+                                                        cursor: 'not-allowed', 
+                                                    }}
+                                                >
+                                                    リクエスト
+                                                </Button>
+                                            </Box>
                                         </Box>
                                     </HStack>
                                 </Box>
-                                <Box flex="6.5" pl="4">
-                                    <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}>
-                                        {post.start_time instanceof Timestamp ? formatDate(post.start_time) : post.start_time.toString()}
-                                    </Text>
-                                    <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}><strong>{post.start_spot} - {post.goal_spot}</strong></Text>
-                                    <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}><strong>車: {post.driverInfo?.carType}</strong></Text>
-                                    <Text><strong>備考:</strong> {post.remarks}</Text>
-                                    <Box display="flex" justifyContent="flex-end">
-                                        <Button
-                                            marginTop='4'
-                                            color='white'
-                                            bg='teal.400'
-                                            isLoading={isSubmitting === post.id}
-                                            onClick={() => handleRegisterClick(post.id)}
-                                            paddingX='auto'
-                                            _hover={{
-                                                borderColor: 'transparent',
-                                                boxShadow: '0 7px 10px rgba(0, 0, 0, 0.3)',
-                                            }}
-                                        >
-                                            リクエスト
-                                        </Button>
-                                    </Box>
-                                </Box>
-                                
-                            </HStack>
-                        </Box>
-                    ))
-                ) : (
-                    <Text>ポストが見つかりませんでした。</Text>
-                )}
+                            ))
+                    ) : (
+                        <Text>ポストが見つかりませんでした。</Text>
+                    )
+            ) : (
+                <Text>ポストが見つかりませんでした。</Text>
+            )}
             </VStack>
         </Box>
     );
