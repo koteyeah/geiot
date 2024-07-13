@@ -10,7 +10,6 @@ import { getPositionDifference } from "./utils";
 export default function Page() {
   const [userData, setUser] = useState<DocumentData | null>(null);
   const [otherUserData, setOtherUser] = useState<DocumentData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [status, setStatus] = useState<
     "募集中" | "成立中" | "相乗り中" | "相乗り終了" | null
   >(null);
@@ -110,11 +109,9 @@ export default function Page() {
                 }
               }
             }
-            setLoading(false);
           }
         } catch (error) {
           console.log(error);
-          setLoading(false);
         }
       }
     });
@@ -204,18 +201,6 @@ export default function Page() {
       </Flex>
     );
   };
-  if (loading) {
-    return (
-      <Flex
-        align="center"
-        justify="center"
-        height="100vh"
-        flexDirection="column"
-      >
-        <Heading>Loading...</Heading>
-      </Flex>
-    );
-  }
 
   return (
     <AinoriComponent
