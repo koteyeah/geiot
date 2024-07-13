@@ -105,7 +105,7 @@ export default function Page() {
               const ainoriDoc = await getDoc(doc(db, "ainories", isAinori));
               if (ainoriDoc.exists()) {
                 const ainoriData = ainoriDoc.data();
-                setAinoriData(ainoriData);
+                setAinori(ainoriData);
                 setStatus(ainoriData.status);
                 setUserType(
                   ainoriData.driver === user.uid ? "ドライバー" : "乗客"
