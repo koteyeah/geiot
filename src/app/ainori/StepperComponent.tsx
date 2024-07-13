@@ -2,28 +2,35 @@ import {
   useSteps,
   Box,
   Step,
-  StepDescription,
   StepIndicator,
   StepSeparator,
   StepTitle,
   Stepper,
   Image,
   Text,
+  StepStatus,
+  StepDescription,
+  StepIcon,
+  StepNumber,
 } from "@chakra-ui/react";
 
-export const defaultSteps = ["成立", "相乗り中", "到着"];
-
 interface StepperComponentProps {
-  steps?: string[];
-  activeStep: string;
+  steps?: { title: string; description: string }[];
+  status: string;
 }
+
+const defaultSteps = [
+  { title: "成立", description: "Start your AINORI" },
+  { title: "相乗り中", description: "Enjoy AINORI" },
+  { title: "到着", description: "Nice AINORI" },
+];
 
 const StepperComponent: React.FC<StepperComponentProps> = ({
   steps = defaultSteps,
-  activeStep,
+  status,
 }) => {
   let statusIndex = 0;
-  switch (activeStep) {
+  switch (status) {
     case "成立":
       statusIndex = 0;
       break;
@@ -34,28 +41,29 @@ const StepperComponent: React.FC<StepperComponentProps> = ({
       statusIndex = 2;
       break;
   }
+  const { activeStep } = useSteps({
+    index: statusIndex + 1,
+    count: steps.length,
+  });
 
   return (
-    <Stepper index={statusIndex + 1}>
-      {steps.map((step) => (
-        <Step key={step}>
+    <Stepper index={activeStep}>
+      {steps.map((step, index) => (
+        <Step key={index}>
           <StepIndicator>
-            {step === "成立" && (
-              <Image src="/icons/seiritsu.svg" alt="Seiritsu" boxSize="30px" />
-            )}
-            {step === "相乗り中" && (
-              <Image src="/icons/car.svg" alt="Car" boxSize="30px" />
-            )}
-            {step === "到着" && (
-              <Image src="/icons/arrive.svg" alt="Arrive" boxSize="30px" />
-            )}
+            <StepStatus
+              complete={<StepIcon />}
+              incomplete={<StepNumber />}
+              active={<StepNumber />}
+            />
           </StepIndicator>
-          <Box flexShrink="0" textAlign="center">
-            <StepTitle>
-              <Text fontSize={"sm"}>{step}</Text>
-            </StepTitle>
+
+          <Box flexShrink="0">
+            <StepTitle>{step.title}</StepTitle>
+            <StepDescription>{step.description}</StepDescription>
           </Box>
-          {statusIndex < steps.length - 1 && <StepSeparator />}
+
+          <StepSeparator />
         </Step>
       ))}
     </Stepper>

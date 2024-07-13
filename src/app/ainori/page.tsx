@@ -12,10 +12,7 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { getPositionDifference } from "./utils";
-import { update } from "firebase/database";
-
 import StepperComponent from "./StepperComponent";
-import { defaultSteps } from "./StepperComponent";
 import ProfileCard from "./ProfileCard";
 
 export default function Page() {
@@ -186,11 +183,11 @@ export default function Page() {
     // 相乗りを行っていない場合の出力
     if (status == null) {
       return (
-        <Heading>
-          相乗り処理は行われていません！<br></br>
-          掲示板から相乗りを利用してみよう。
-        </Heading>
-        // <StepperComponent activeStep={"成立"} />
+        // <Heading>
+        //   相乗り処理は行われていません！<br></br>
+        //   掲示板から相乗りを利用してみよう。
+        // </Heading>
+        <StepperComponent status={"到着"} />
       );
     }
     if (status == "募集中") {
@@ -220,7 +217,7 @@ export default function Page() {
       return (
         <Flex align="center" justify="center" height="100vh">
           <VStack spacing={5}>
-            {status && <StepperComponent activeStep={status} />}
+            {status && <StepperComponent status={status} />}
             {(status == "成立" || status == "相乗り中") && (
               <Text>ここに取引相手のプロフィールを表示</Text>
             )}
