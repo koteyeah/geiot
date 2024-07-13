@@ -285,6 +285,7 @@ export default function Page() {
                     });
                   }
                   alert("取引をキャンセルしました。");
+                  router.push("/postList");
                 }}
               >
                 取引をキャンセル
