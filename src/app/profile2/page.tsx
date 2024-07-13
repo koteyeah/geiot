@@ -46,8 +46,8 @@ export default function Profile2Screen() {
 
       const profileData = {
         year: data.year,
-        smoking: data.smoking,
-        japaneseProficiency: data.japaneseProficiency,
+        smoking: data.smoking === 'T',
+        japaneseProficiency: data.japaneseProficiency === 'T',
       };
 
       const profileRef = doc(db, 'Users', userUid, 'Profile', 'Info');
@@ -101,8 +101,8 @@ export default function Profile2Screen() {
                 onChange={(value) => setValue('smoking', value)}
               >
                 <Stack direction='row'>
-                  <Radio value='yes'>可</Radio>
-                  <Radio value='no'>否</Radio>
+                  <Radio value='T'>可</Radio>
+                  <Radio value='F'>否</Radio>
                 </Stack>
               </RadioGroup>
               <FormErrorMessage>
@@ -119,8 +119,8 @@ export default function Profile2Screen() {
                 onChange={(value) => setValue('japaneseProficiency', value)}
               >
                 <Stack direction='row'>
-                  <Radio value='yes'>可</Radio>
-                  <Radio value='no'>否</Radio>
+                  <Radio value='T'>可</Radio>
+                  <Radio value='F'>否</Radio>
                 </Stack>
               </RadioGroup>
               <FormErrorMessage>
