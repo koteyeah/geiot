@@ -141,7 +141,11 @@ export default function ProfileScreen() {
     if (user) {
       const userUid = user.uid;
       const profileRef = doc(db, 'Users', userUid, 'Profile', 'Info');
+      const userRef = doc(db, 'Users', userUid);
+      
       await setDoc(profileRef, data);
+      await setDoc(userRef, { status: null }, { merge: true });
+
       console.log('Profile data submitted and saved:', data);
       router.push('/profile2');  // 登録後に profile2 に遷移する
     } else {
