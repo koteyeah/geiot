@@ -14,6 +14,10 @@ import {
 import { getPositionDifference } from "./utils";
 import { update } from "firebase/database";
 
+import StepperComponent from "./StepperComponent";
+import { defaultSteps } from "./StepperComponent";
+import ProfileCard from "./ProfileCard";
+
 export default function Page() {
   const [userData, setUser] = useState<DocumentData | null>(null);
   const [userKey, setUserKey] = useState<string>("");
@@ -27,12 +31,11 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userType, setUserType] = useState<"ドライバー" | "乗客" | null>(null);
   const router = useRouter();
-  let isProcessing = false; // ボタン等の操作フラグを追加
+  let isProcessing = false;
 
   const handleRideButton = async () => {
-    if (isProcessing) return; // 処理中であれば何もしない
-    isProcessing = true; // フラグを立てる
-    // NAISTの位置
+    if (isProcessing) return;
+    isProcessing = true;
     const departureLat = 34.731922;
     const departureLon = 135.73168;
     try {
@@ -47,17 +50,17 @@ export default function Page() {
       } else {
         console.log("出発地から離れています。");
         alert("出発地から離れています。");
-        // 離れている場合の処理を追加
       }
     } catch (error) {
       console.log("位置情報の取得に失敗しました。");
       alert("位置情報の取得に失敗しました。");
     } finally {
-      isProcessing = false; // 処理完了後にフラグを解除
+      isProcessing = false;
     }
   };
 
   const handleGetOffButton = async () => {
+
     if (isProcessing) return; // 処理中であれば何もしない
     isProcessing = true; // フラグを立てる
     let destinationLat = 0;
@@ -78,14 +81,11 @@ export default function Page() {
     }
     console.log(destinationLat, destinationLon);
     try {
-      const isNear = await getPositionDifference(
-        destinationLat,
-        destinationLon
-      );
+      const isNear = await getPositionDifference(destinationLat, destinationLon);
       if (isNear) {
         console.log("目的地から500m以内です。相乗りを完了します。");
         alert("目的地から500m以内です。相乗りを完了します。");
-        setStatus("相乗り終了");
+
         await updateDoc(doc(db, "ainories", ainoriKey), {
           status: "相乗り終了",
         });
@@ -98,17 +98,16 @@ export default function Page() {
       } else {
         console.log("出発地から離れています。");
         alert("出発地から離れています。");
-        // 離れている場合の処理を追加
       }
     } catch (error) {
       console.error("位置情報の取得に失敗しました。");
       alert("位置情報の取得に失敗しました。");
     } finally {
-      isProcessing = false; // 処理完了後にフラグを解除
+      isProcessing = false;
     }
   };
+
   useEffect(() => {
-    // ユーザーのログイン状態を確認したのち、相乗り状況を取得し、格納
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
@@ -128,10 +127,18 @@ export default function Page() {
                 setAinoriKey(ainoriDoc.id);
                 setAinori(ainoriData);
                 setStatus(ainoriData.status);
-                setUserType(
-                  ainoriData.driver === user.uid ? "ドライバー" : "乗客"
-                );
+                setUserType(ainoriData.driver === user.uid ? "ドライバー" : "乗客");
               }
+              if (status === "成立中" || status === "相乗り中") {
+                switch (userType) {
+                  case "ドライバー":
+                    const passengerDoc = await getDoc(doc(db, "users", ainoriData!.passenger));
+                    if (passengerDoc.exists()) setOtherUser(passengerDoc.data());
+                    break;
+                  case "乗客":
+                    const driverDoc = await getDoc(doc(db, "users", ainoriData!.driver));
+                    if (driverDoc.exists()) setOtherUser(driverDoc.data());
+
               // 相手のユーザー情報を取得
               if (status == "成立中" || status == "相乗り中") {
                 switch (userType) {
@@ -168,6 +175,7 @@ export default function Page() {
     });
     return () => unsubscribe();
   }, []);
+
   const AinoriComponent = ({
     status,
     userType,
