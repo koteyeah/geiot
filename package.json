@@ -13,13 +13,15 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@types/react-router-dom": "^5.3.3",
+    "@types/styled-components": "^5.1.34",
     "firebase": "^10.12.2",
     "framer-motion": "^11.2.13",
     "next": "14.2.4",
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.52.0",
-    "react-router-dom": "^6.24.1"
+    "react-router-dom": "^6.24.1",
+    "styled-components": "^6.1.11"
   },
   "devDependencies": {
     "@types/node": "^20",
