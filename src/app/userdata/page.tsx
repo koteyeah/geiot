@@ -22,6 +22,7 @@ import {
   RadioGroup,
   Radio,
   useToast,
+  FormErrorMessage,
 } from '../../common/design';
 
 // ユーザーのプロフィールデータの型を定義
@@ -137,11 +138,23 @@ const ProfilePage = () => {
   const router = useRouter();
   const toast = useToast();
   const [userUid, setUserUid] = useState<string | null>(null);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profile, setProfile] = useState<ProfileData>({
+    username: '',
+    gender: '',
+    region: '',
+    laboratory: '',
+    studentNumber: '',
+    phoneNumber: '',
+    year: '',
+    smoking: false,
+    japaneseProficiency: false,
+    driverProfile: false,
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [phoneNumberError, setPhoneNumberError] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUser = () => {
@@ -182,6 +195,28 @@ const ProfilePage = () => {
 
   const handleSave = async () => {
     if (!userUid || !profile) return;
+
+    // 必須項目チェック
+    if (Object.values(profile).some(value => value === '' || value === null || value === undefined)) {
+      toast({
+        title: 'エラー',
+        description: 'すべての項目を入力してください。',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // 電話番号の形式チェック
+    const phoneNumberPattern = /^\d{3}-\d{4}-\d{4}$/;
+    if (!phoneNumberPattern.test(profile.phoneNumber)) {
+      setPhoneNumberError(true);
+      return;
+    } else {
+      setPhoneNumberError(false);
+    }
+
     try {
       const docRef = doc(db, 'Users', userUid, 'Profile', 'Info');
       await setDoc(docRef, profile, { merge: true });
@@ -206,174 +241,175 @@ const ProfilePage = () => {
   const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedRegion = e.target.value;
     setSelectedRegion(selectedRegion);
-    setProfile((prevProfile) => {
-      if (!prevProfile) return null;
-      return { ...prevProfile, region: selectedRegion, laboratory: '' };
-    });
+    setProfile((prevProfile) => ({
+      ...prevProfile,
+      region: selectedRegion,
+      laboratory: ''
+    }));
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+  return (
+    <Box display="flex" justifyContent="center" alignItems="center" height="100vh" padding="5" mt="35px">
+      {loading ? (
         <Spinner size="xl" />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      ) : error ? (
         <Alert status="error">
           <AlertIcon />
           {error}
         </Alert>
-      </Box>
-    );
-  }
-
-  return (
-    <Box display="flex" justifyContent="center" alignItems="center" height="100vh" padding="5" mt="35px">
-      <VStack spacing="5" alignItems="left" width="80%">
-        <Flex width="100%" justifyContent="space-between" alignItems="center">
-          <Heading>プロフィール情報</Heading>
-          <Button onClick={() => setIsEditing(!isEditing)}>
-            {isEditing ? 'キャンセル' : '編集'}
-          </Button>
-        </Flex>
-        {profile ? (
-          isEditing ? (
-            <VStack spacing="4" alignItems="left" as="form">
-              <FormControl>
-                <FormLabel>ユーザーネーム</FormLabel>
-                <Input
-                  value={profile.username}
-                  onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>性別</FormLabel>
-                <Select
-                  value={profile.gender}
-                  onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                >
-                  <option value="male">男性</option>
-                  <option value="female">女性</option>
-                  <option value="other">その他</option>
-                </Select>
-              </FormControl>
-              <FormControl>
-                <FormLabel>領域</FormLabel>
-                <Select
-                  value={profile.region}
-                  onChange={handleRegionChange}
-                >
-                  <option value="">選択してください</option>
-                  {Object.keys(labData).map((region) => (
-                    <option key={region} value={region}>{region}</option>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl>
-                <FormLabel>研究室</FormLabel>
-                <Select
-                  value={profile.laboratory}
-                  onChange={(e) => setProfile({ ...profile, laboratory: e.target.value })}
-                  isDisabled={!selectedRegion}
-                >
-                  <option value="">選択してください</option>
-                  {selectedRegion && labData[selectedRegion].map((lab) => (
-                    <option key={lab} value={lab}>{lab}</option>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl>
-                <FormLabel>学籍番号</FormLabel>
-                <Input
-                  value={profile.studentNumber}
-                  onChange={(e) => setProfile({ ...profile, studentNumber: e.target.value })}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>電話番号</FormLabel>
-                <Input
-                  value={profile.phoneNumber}
-                  onChange={(e) => setProfile({ ...profile, phoneNumber: e.target.value })}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>学年</FormLabel>
-                <Select
-                  value={profile.year}
-                  onChange={(e) => setProfile({ ...profile, year: e.target.value })}
-                >
-                  <option value="M1">M1</option>
-                  <option value="M2">M2</option>
-                  <option value="D1">D1</option>
-                  <option value="D2">D2</option>
-                  <option value="D3">D3</option>
-                </Select>
-              </FormControl>
-              <FormControl>
-                <FormLabel>喫煙</FormLabel>
-                <RadioGroup
-                  value={profile.smoking ? 'true' : 'false'}
-                  onChange={(value) => setProfile({ ...profile, smoking: value === 'true' })}
-                >
-                  <Flex>
-                    <Radio value="true">可</Radio>
-                    <Radio value="false">否</Radio>
-                  </Flex>
-                </RadioGroup>
-              </FormControl>
-              <FormControl>
-                <FormLabel>日本語</FormLabel>
-                <RadioGroup
-                  value={profile.japaneseProficiency ? 'true' : 'false'}
-                  onChange={(value) => setProfile({ ...profile, japaneseProficiency: value === 'true' })}
-                >
-                  <Flex>
-                    <Radio value="true">可</Radio>
-                    <Radio value="false">否</Radio>
-                  </Flex>
-                </RadioGroup>
-              </FormControl>
-              <FormControl>
-                <FormLabel>ドライバープロフィール</FormLabel>
-                <RadioGroup
-                  value={profile.driverProfile ? 'true' : 'false'}
-                  onChange={(value) => setProfile({ ...profile, driverProfile: value === 'true' })}
-                >
-                  <Flex>
-                    <Radio value="true">登録済</Radio>
-                    <Radio value="false">未登録</Radio>
-                  </Flex>
-                </RadioGroup>
-              </FormControl>
-              <Button onClick={handleSave} colorScheme="teal">
-                保存
-              </Button>
-              <Button onClick={handleNavigateToUserData1} colorScheme="teal">
-                DriverProfileへ
-              </Button>
-            </VStack>
-          ) : (
-            <>
-              <Text><strong>ユーザーネーム:</strong> {profile.username}</Text>
-              <Text><strong>性別:</strong> {profile.gender}</Text>
-              <Text><strong>領域:</strong> {profile.region}</Text>
-              <Text><strong>研究室:</strong> {profile.laboratory}</Text>
-              <Text><strong>学籍番号:</strong> {profile.studentNumber}</Text>
-              <Text><strong>電話番号:</strong> {profile.phoneNumber}</Text>
-              <Text><strong>学年:</strong> {profile.year}</Text>
-              <Text><strong>喫煙:</strong> {profile.smoking ? '可' : '否'}</Text>
-              <Text><strong>日本語:</strong> {profile.japaneseProficiency ? '可' : '否'}</Text>
-              <Text><strong>ドライバープロフィール:</strong> {profile.driverProfile ? '登録済' : '未登録'}</Text>
-            </>
-          )
-        ) : (
-          <Text>プロフィール情報が読み込めませんでした。</Text>
-        )}
-      </VStack>
+      ) : (
+        <VStack spacing="5" alignItems="left" width="80%">
+          <Flex width="100%" justifyContent="space-between" alignItems="center">
+            <Heading>プロフィール情報</Heading>
+            <Button onClick={() => setIsEditing(!isEditing)}>
+              {isEditing ? 'キャンセル' : '編集'}
+            </Button>
+          </Flex>
+          {profile && (
+            isEditing ? (
+              <VStack spacing="4" alignItems="left" as="form">
+                <FormControl isInvalid={!profile.username}>
+                  <FormLabel>ユーザーネーム</FormLabel>
+                  <Input
+                    value={profile.username}
+                    onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                  />
+                  {!profile.username && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={!profile.gender}>
+                  <FormLabel>性別</FormLabel>
+                  <Select
+                    value={profile.gender}
+                    onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
+                  >
+                    <option value="">選択してください</option>
+                    <option value="male">男性</option>
+                    <option value="female">女性</option>
+                    <option value="other">その他</option>
+                  </Select>
+                  {!profile.gender && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={!profile.region}>
+                  <FormLabel>領域</FormLabel>
+                  <Select
+                    value={profile.region}
+                    onChange={handleRegionChange}
+                  >
+                    <option value="">選択してください</option>
+                    {Object.keys(labData).map((region) => (
+                      <option key={region} value={region}>{region}</option>
+                    ))}
+                  </Select>
+                  {!profile.region && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={!profile.laboratory}>
+                  <FormLabel>研究室</FormLabel>
+                  <Select
+                    value={profile.laboratory}
+                    onChange={(e) => setProfile({ ...profile, laboratory: e.target.value })}
+                    isDisabled={!selectedRegion}
+                  >
+                    <option value="">選択してください</option>
+                    {selectedRegion && labData[selectedRegion].map((lab) => (
+                      <option key={lab} value={lab}>{lab}</option>
+                    ))}
+                  </Select>
+                  {!profile.laboratory && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={!profile.studentNumber}>
+                  <FormLabel>学籍番号</FormLabel>
+                  <Input
+                    value={profile.studentNumber}
+                    onChange={(e) => setProfile({ ...profile, studentNumber: e.target.value })}
+                  />
+                  {!profile.studentNumber && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={!profile.phoneNumber || phoneNumberError}>
+                  <FormLabel>電話番号</FormLabel>
+                  <Input
+                    value={profile.phoneNumber}
+                    onChange={(e) => setProfile({ ...profile, phoneNumber: e.target.value })}
+                  />
+                  {(!profile.phoneNumber || phoneNumberError) && <FormErrorMessage>必須項目です。正しい形式で入力してください。</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={!profile.year}>
+                  <FormLabel>学年</FormLabel>
+                  <Select
+                    value={profile.year}
+                    onChange={(e) => setProfile({ ...profile, year: e.target.value })}
+                  >
+                    <option value="">選択してください</option>
+                    <option value="M1">M1</option>
+                    <option value="M2">M2</option>
+                    <option value="D1">D1</option>
+                    <option value="D2">D2</option>
+                    <option value="D3">D3</option>
+                  </Select>
+                  {!profile.year && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={profile.smoking === null}>
+                  <FormLabel>喫煙</FormLabel>
+                  <RadioGroup
+                    value={profile.smoking ? 'true' : 'false'}
+                    onChange={(value) => setProfile({ ...profile, smoking: value === 'true' })}
+                  >
+                    <Flex>
+                      <Radio value="true">可</Radio>
+                      <Radio value="false">否</Radio>
+                    </Flex>
+                  </RadioGroup>
+                  {profile.smoking === null && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={profile.japaneseProficiency === null}>
+                  <FormLabel>日本語</FormLabel>
+                  <RadioGroup
+                    value={profile.japaneseProficiency ? 'true' : 'false'}
+                    onChange={(value) => setProfile({ ...profile, japaneseProficiency: value === 'true' })}
+                  >
+                    <Flex>
+                      <Radio value="true">可</Radio>
+                      <Radio value="false">否</Radio>
+                    </Flex>
+                  </RadioGroup>
+                  {profile.japaneseProficiency === null && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <FormControl isInvalid={profile.driverProfile === null}>
+                  <FormLabel>ドライバープロフィール</FormLabel>
+                  <RadioGroup
+                    value={profile.driverProfile ? 'true' : 'false'}
+                    onChange={(value) => setProfile({ ...profile, driverProfile: value === 'true' })}
+                  >
+                    <Flex>
+                      <Radio value="true">登録済</Radio>
+                      <Radio value="false">未登録</Radio>
+                    </Flex>
+                  </RadioGroup>
+                  {profile.driverProfile === null && <FormErrorMessage>必須項目です</FormErrorMessage>}
+                </FormControl>
+                <Button onClick={handleSave} colorScheme="teal">
+                  保存
+                </Button>
+                <Button onClick={handleNavigateToUserData1} colorScheme="teal">
+                  DriverProfileへ
+                </Button>
+              </VStack>
+            ) : (
+              <>
+                <Text><strong>ユーザーネーム:</strong> {profile.username}</Text>
+                <Text><strong>性別:</strong> {profile.gender}</Text>
+                <Text><strong>領域:</strong> {profile.region}</Text>
+                <Text><strong>研究室:</strong> {profile.laboratory}</Text>
+                <Text><strong>学籍番号:</strong> {profile.studentNumber}</Text>
+                <Text><strong>電話番号:</strong> {profile.phoneNumber}</Text>
+                <Text><strong>学年:</strong> {profile.year}</Text>
+                <Text><strong>喫煙:</strong> {profile.smoking ? '可' : '否'}</Text>
+                <Text><strong>日本語:</strong> {profile.japaneseProficiency ? '可' : '否'}</Text>
+                <Text><strong>ドライバープロフィール:</strong> {profile.driverProfile ? '登録済' : '未登録'}</Text>
+              </>
+            )
+          )}
+        </VStack>
+      )}
     </Box>
   );
 };
