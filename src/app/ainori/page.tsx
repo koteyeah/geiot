@@ -183,11 +183,11 @@ export default function Page() {
     // 相乗りを行っていない場合の出力
     if (status == null) {
       return (
-        // <Heading>
-        //   相乗り処理は行われていません！<br></br>
-        //   掲示板から相乗りを利用してみよう。
-        // </Heading>
-        <StepperComponent status={"到着"} />
+        <Heading>
+          相乗り処理は行われていません！<br></br>
+          掲示板から相乗りを利用してみよう。
+        </Heading>
+        // <StepperComponent status={"到着"} />
       );
     }
     if (status == "募集中") {
