@@ -1,3 +1,4 @@
+import ClientLayout from './ClientLayout';
 import DesignProvider from "../common/providers/design_provider";
 
 import type { Metadata } from "next";
@@ -14,8 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body>
-        <DesignProvider>{children}</DesignProvider>
+      <body style={{ margin: 0, padding: 0, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <DesignProvider>
+          <ClientLayout>{children}</ClientLayout>
+        </DesignProvider>
       </body>
     </html>
   );
