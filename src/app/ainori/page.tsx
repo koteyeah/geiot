@@ -7,6 +7,8 @@ import { auth, db } from "@/src/lib/firebase/config";
 import { getDoc, doc, DocumentData } from "firebase/firestore";
 import { getPositionDifference } from "./utils";
 
+import AinoriComponent from "./AinoriComponent";
+
 export default function Page() {
   const [userData, setUser] = useState<DocumentData | null>(null);
   const [otherUserData, setOtherUser] = useState<DocumentData | null>(null);
@@ -72,6 +74,7 @@ export default function Page() {
       isProcessing = false; // 処理完了後にフラグを解除
     }
   };
+
   useEffect(() => {
     // ユーザーのログイン状態を確認したのち、相乗り状況を取得し、格納
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -119,91 +122,8 @@ export default function Page() {
       }
     });
     return () => unsubscribe();
-  }, [status, userType, ainoriData]);
-  const AinoriComponent = ({
-    status,
-    userType,
-    otherUserData,
-    ainoriData,
-  }: {
-    status: string | null;
-    userType: string | null;
-    otherUserData: DocumentData | null;
-    ainoriData: DocumentData | null;
-  }) => {
-    if (status == null)
-      return (
-        <Heading>
-          相乗り処理は行われていません！<br></br>
-          掲示板から相乗りを利用してみよう。
-        </Heading>
-      );
-    return (
-      <Flex align="center" justify="center" height="100vh">
-        <VStack spacing={5}>
-          {status && (
-            <Heading>ここにプログレスバー。現在の状態は{status}</Heading>
-          )}
-          {(status == "成立中" || status == "相乗り中") && (
-            <Text>ここに取引相手のプロフィールを表示</Text>
-          )}
-          {status == "募集中" && <Text>現在相乗りを募集しています。</Text>}
-          {ainoriData && <Text>ここに相乗り情報を表示。</Text>}
-          {status == "成立中" && (
-            <>
-              <Heading>
-                相乗りが成立しています。出発時刻に遅れないようにしましょう。
-              </Heading>
-              {userType === "ドライバー" ? (
-                <Button
-                  onClick={() => {
-                    router.refresh();
-                  }}
-                >
-                  更新
-                </Button>
-              ) : (
-                <>
-                  <Text>ドライバーと合流したら乗車するを押してください。</Text>
-                  <Button onClick={handleRideButton}>乗車する</Button>
-                </>
-              )}
-            </>
-          )}
-          {status == "相乗り中" && (
-            <>
-              <Heading>
-                相乗り中です。目的地まで安全に相乗りを楽しんで！
-              </Heading>
-              {userType === "ドライバー" ? (
-                <Button
-                  onClick={() => {
-                    console.log("aaa");
-                    router.refresh();
-                  }}
-                >
-                  更新
-                </Button>
-              ) : (
-                <>
-                  <Text>目的地に到着したら降車するを押してください</Text>
-                  <Button onClick={handleGetOffButton}>降車する</Button>
-                </>
-              )}
-            </>
-          )}
-          {status == "相乗り終了" && userType == "乗客" && (
-            <>
-              <Heading>
-                相乗りは完了しました！またのご利用お待ちしています！
-              </Heading>
-              <Text fontSize="3xl">別のページに移動してください</Text>
-            </>
-          )}
-        </VStack>
-      </Flex>
-    );
-  };
+  }, []);
+
   if (loading) {
     return (
       <Flex
@@ -223,6 +143,8 @@ export default function Page() {
       userType={userType}
       otherUserData={null}
       ainoriData={null}
+      handleRideButton={handleRideButton}
+      handleGetOffButton={handleGetOffButton}
     />
   );
 }
