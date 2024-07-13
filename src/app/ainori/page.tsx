@@ -60,7 +60,6 @@ export default function Page() {
   };
 
   const handleGetOffButton = async () => {
-
     if (isProcessing) return; // 処理中であれば何もしない
     isProcessing = true; // フラグを立てる
     let destinationLat = 0;
@@ -81,7 +80,10 @@ export default function Page() {
     }
     console.log(destinationLat, destinationLon);
     try {
-      const isNear = await getPositionDifference(destinationLat, destinationLon);
+      const isNear = await getPositionDifference(
+        destinationLat,
+        destinationLon
+      );
       if (isNear) {
         console.log("目的地から500m以内です。相乗りを完了します。");
         alert("目的地から500m以内です。相乗りを完了します。");
@@ -127,43 +129,33 @@ export default function Page() {
                 setAinoriKey(ainoriDoc.id);
                 setAinori(ainoriData);
                 setStatus(ainoriData.status);
-                setUserType(ainoriData.driver === user.uid ? "ドライバー" : "乗客");
-              }
-              if (status === "成立中" || status === "相乗り中") {
-                switch (userType) {
-                  case "ドライバー":
-                    const passengerDoc = await getDoc(doc(db, "users", ainoriData!.passenger));
-                    if (passengerDoc.exists()) setOtherUser(passengerDoc.data());
-                    break;
-                  case "乗客":
-                    const driverDoc = await getDoc(doc(db, "users", ainoriData!.driver));
-                    if (driverDoc.exists()) setOtherUser(driverDoc.data());
+                setUserType(
+                  ainoriData.driver === user.uid ? "ドライバー" : "乗客"
+                );
 
-              // 相手のユーザー情報を取得
-              if (status == "成立中" || status == "相乗り中") {
-                switch (userType) {
-                  case "ドライバー":
-                    console.log("ユーザーはドライバーで登録しています");
-                    const passengerDoc = await getDoc(
-                      doc(db, "users", ainoriData!.passenger)
-                    );
-                    if (passengerDoc.exists()) {
-                      setOtherUser(passengerDoc.data());
-                      setOtherUserKey(passengerDoc.id);
-                    }
-                    break;
-                  case "乗客":
-                    console.log("乗客で登録しています。");
-                    const driverDoc = await getDoc(
-                      doc(db, "users", ainoriData!.driver)
-                    );
-                    if (driverDoc.exists()) {
-                      setOtherUser(driverDoc.data());
-                      setOtherUserKey(driverDoc.id);
-                    }
-                    break;
+                if (status === "成立中" || status === "相乗り中") {
+                  switch (userType) {
+                    case "ドライバー":
+                      const passengerDoc = await getDoc(
+                        doc(db, "users", ainoriData.passenger)
+                      );
+                      if (passengerDoc.exists()) {
+                        setOtherUser(passengerDoc.data());
+                        setOtherUserKey(passengerDoc.id);
+                      }
+                      break;
+                    case "乗客":
+                      const driverDoc = await getDoc(
+                        doc(db, "users", ainoriData.driver)
+                      );
+                      if (driverDoc.exists()) {
+                        setOtherUser(driverDoc.data());
+                        setOtherUserKey(driverDoc.id);
+                      }
+                      break;
+                  }
+                  console.log("取引相手のIDは" + otherUserKey);
                 }
-                console.log("取引相手のIDは" + otherUserKey);
               }
             }
           }
