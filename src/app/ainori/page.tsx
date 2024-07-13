@@ -9,11 +9,14 @@ import { getPositionDifference } from "./utils";
 
 export default function Page() {
   const [userData, setUser] = useState<DocumentData | null>(null);
+  const [userDoc, setUserDoc] = useState<Document | null>(null);
   const [otherUserData, setOtherUser] = useState<DocumentData | null>(null);
+  const [otherUserDoc, setOtherUserDoc] = useState<Document | null>(null);
+  const [ainoriData, setAinori] = useState<DocumentData | null>(null);
+  const [ainoriDoc, setAinoriDoc] = useState<Document | null>(null);
   const [status, setStatus] = useState<
     "募集中" | "成立中" | "相乗り中" | "相乗り終了" | null
   >(null);
-  const [ainoriData, setAinoriData] = useState<DocumentData | null>(null);
   const [userType, setUserType] = useState<"ドライバー" | "乗客" | null>(null);
   const router = useRouter();
   let isProcessing = false; // ボタン等の操作フラグを追加
