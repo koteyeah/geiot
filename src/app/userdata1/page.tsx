@@ -138,6 +138,7 @@ const ProfilePage = () => {
                 name="carType"
                 value={profile.carType}
                 onChange={handleInputChange}
+                borderColor="black" // 入力欄を黒く囲む
               />
             </FormControl>
             <FormControl>
@@ -147,6 +148,7 @@ const ProfilePage = () => {
                 name="carNumber"
                 value={profile.carNumber}
                 onChange={handleInputChange}
+                borderColor="black" // 入力欄を黒く囲む
               />
               {carNumberError && (
                 <Text color="red">{carNumberError}</Text>
@@ -158,6 +160,7 @@ const ProfilePage = () => {
                 name="transmission"
                 value={profile.transmission}
                 onChange={handleInputChange}
+                borderColor="black" // 入力欄を黒く囲む
               >
                 <option value="マニュアル">マニュアル</option>
                 <option value="オートマチック">オートマチック</option>
@@ -169,6 +172,7 @@ const ProfilePage = () => {
                 name="maxCapacity"
                 value={profile.maxCapacity.toString()}
                 onChange={handleInputChange}
+                borderColor="black" // 入力欄を黒く囲む
               >
                 {[...Array(7)].map((_, index) => (
                   <option key={index} value={(index + 2).toString()}>
@@ -185,8 +189,8 @@ const ProfilePage = () => {
                 onChange={(value) => setProfile({ ...profile, foodAndDrink: value === 'true' })}
               >
                 <Flex>
-                  <Radio value="true">可</Radio>
-                  <Radio value="false">不可</Radio>
+                  <Radio value="true" borderColor="black">可</Radio>
+                  <Radio value="false" borderColor="black">不可</Radio>
                 </Flex>
               </RadioGroup>
             </FormControl>
@@ -198,8 +202,8 @@ const ProfilePage = () => {
                 onChange={(value) => setProfile({ ...profile, hasPets: value === 'true' })}
               >
                 <Flex>
-                  <Radio value="true">飼っている</Radio>
-                  <Radio value="false">飼っていない</Radio>
+                  <Radio value="true" borderColor="black">飼っている</Radio>
+                  <Radio value="false" borderColor="black">飼っていない</Radio>
                 </Flex>
               </RadioGroup>
             </FormControl>
