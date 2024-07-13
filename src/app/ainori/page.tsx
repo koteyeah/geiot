@@ -164,37 +164,96 @@ export default function Page() {
     });
     return () => unsubscribe();
   }, []);
-
-  const AinoriComponent = ({
-    status,
-    userType,
-    otherUserData,
-    ainoriData,
-    isLoading,
-  }: {
-    status: string | null;
-    userType: string | null;
-    otherUserData: DocumentData | null;
-    ainoriData: DocumentData | null;
-    isLoading: Boolean;
-  }) => {
-    if (isLoading) return <Heading>loading...</Heading>;
-
-    // 相乗りを行っていない場合の出力
-    if (status == null) {
-      return (
-        <Heading>
-          相乗り処理は行われていません！<br></br>
-          掲示板から相乗りを利用してみよう。
-        </Heading>
-        // <StepperComponent status={"到着"} />
-      );
-    }
-    if (status == "募集中") {
-      return (
-        <>
-          <Text>現在相乗りを募集しています。</Text>
-          <Text>ここに相乗り情報を表示。</Text>
+  if (isLoading) return <Heading>loading...</Heading>;
+  // 相乗りを行っていない場合の出力
+  if (status == null) {
+    return (
+      <Heading>
+        相乗り処理は行われていません！<br></br>
+        掲示板から相乗りを利用してみよう。
+      </Heading>
+      // <StepperComponent status={"到着"} />
+    );
+  }
+  if (status == "募集中") {
+    return (
+      <>
+        <Text>現在相乗りを募集しています。</Text>
+        <Text>ここに相乗り情報を表示。</Text>
+        <Button
+          onClick={async () => {
+            await deleteDoc(doc(db, "ainories", ainoriKey));
+            await updateDoc(doc(db, "Users", userKey), {
+              status: null,
+            });
+            if (otherUserKey != "") {
+              await updateDoc(doc(db, "Users", otherUserKey), {
+                status: null,
+              });
+            }
+            alert("取引をキャンセルしました。");
+          }}
+        >
+          取引をキャンセル
+        </Button>
+      </>
+    );
+  }
+  return (
+    <Flex align="center" justify="center" height="100vh">
+      <VStack spacing={5}>
+        {status && <StepperComponent status={status} />}
+        {(status == "成立" || status == "相乗り中") && (
+          <Text>ここに取引相手のプロフィールを表示</Text>
+        )}
+        {status == "成立" && (
+          <>
+            <Heading>
+              相乗りが成立しています。出発時刻に遅れないようにしましょう。
+            </Heading>
+            {userType === "ドライバー" ? (
+              <Button
+                onClick={() => {
+                  router.refresh();
+                }}
+              >
+                更新
+              </Button>
+            ) : (
+              <>
+                <Text>ドライバーと合流したら乗車するを押してください。</Text>
+                <Button onClick={handleRideButton}>乗車する</Button>
+              </>
+            )}
+          </>
+        )}
+        {status == "相乗り中" && (
+          <>
+            <Heading>相乗り中です。目的地まで安全に相乗りを楽しんで！</Heading>
+            {userType === "ドライバー" ? (
+              <Button
+                onClick={() => {
+                  console.log("aaa");
+                  router.refresh();
+                }}
+              >
+                更新
+              </Button>
+            ) : (
+              <>
+                <Text>目的地に到着したら降車するを押してください</Text>
+                <Button onClick={handleGetOffButton}>降車する</Button>
+              </>
+            )}
+          </>
+        )}
+        {status == "到着" && userType == "乗客" && (
+          <>
+            <Heading>到着しました！またのご利用お待ちしています！</Heading>
+            <Text fontSize="3xl">別のページに移動してください</Text>
+          </>
+        )}
+        {status == "成立" && (
           <Button
             onClick={async () => {
               await deleteDoc(doc(db, "ainories", ainoriKey));
@@ -207,102 +266,13 @@ export default function Page() {
                 });
               }
               alert("取引をキャンセルしました。");
+              router.push("/postList");
             }}
           >
             取引をキャンセル
           </Button>
-        </>
-      );
-    } else {
-      return (
-        <Flex align="center" justify="center" height="100vh">
-          <VStack spacing={5}>
-            {status && <StepperComponent status={status} />}
-            {(status == "成立" || status == "相乗り中") && (
-              <Text>ここに取引相手のプロフィールを表示</Text>
-            )}
-            {status == "成立" && (
-              <>
-                <Heading>
-                  相乗りが成立しています。出発時刻に遅れないようにしましょう。
-                </Heading>
-                {userType === "ドライバー" ? (
-                  <Button
-                    onClick={() => {
-                      router.refresh();
-                    }}
-                  >
-                    更新
-                  </Button>
-                ) : (
-                  <>
-                    <Text>
-                      ドライバーと合流したら乗車するを押してください。
-                    </Text>
-                    <Button onClick={handleRideButton}>乗車する</Button>
-                  </>
-                )}
-              </>
-            )}
-            {status == "相乗り中" && (
-              <>
-                <Heading>
-                  相乗り中です。目的地まで安全に相乗りを楽しんで！
-                </Heading>
-                {userType === "ドライバー" ? (
-                  <Button
-                    onClick={() => {
-                      console.log("aaa");
-                      router.refresh();
-                    }}
-                  >
-                    更新
-                  </Button>
-                ) : (
-                  <>
-                    <Text>目的地に到着したら降車するを押してください</Text>
-                    <Button onClick={handleGetOffButton}>降車する</Button>
-                  </>
-                )}
-              </>
-            )}
-            {status == "到着" && userType == "乗客" && (
-              <>
-                <Heading>到着しました！またのご利用お待ちしています！</Heading>
-                <Text fontSize="3xl">別のページに移動してください</Text>
-              </>
-            )}
-            {status == "成立" && (
-              <Button
-                onClick={async () => {
-                  await deleteDoc(doc(db, "ainories", ainoriKey));
-                  await updateDoc(doc(db, "Users", userKey), {
-                    status: null,
-                  });
-                  if (otherUserKey != "") {
-                    await updateDoc(doc(db, "Users", otherUserKey), {
-                      status: null,
-                    });
-                  }
-                  alert("取引をキャンセルしました。");
-                  router.push("/postList");
-                }}
-              >
-                取引をキャンセル
-              </Button>
-            )}
-          </VStack>
-        </Flex>
-      );
-    }
-  };
-  return (
-    <AinoriComponent
-      status={status}
-      userType={userType}
-      otherUserData={otherUserData}
-      ainoriData={ainoriData}
-      isLoading={isLoading}
-    />
+        )}
+      </VStack>
+    </Flex>
   );
 }
