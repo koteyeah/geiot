@@ -37,3 +37,6 @@ package.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+package.json
+package-lock.json
