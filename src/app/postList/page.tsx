@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { db, auth } from '../../lib/firebase/config'; // Firebase configファイルをインポート
-import { collection, getDocs, doc, getDoc, updateDoc, runTransaction,Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc, runTransaction, Timestamp } from 'firebase/firestore';
 import {
     Box,
     Heading,
@@ -17,8 +17,8 @@ import {
 } from '@chakra-ui/react';
 import { format } from 'date-fns';
 import { onAuthStateChanged } from 'firebase/auth';
-import { set } from 'firebase/database';
 import { useRouter } from 'next/navigation'
+import Image from 'next/image';
 
 type AinoriData = {
     actual_goal_time: Timestamp | null;
@@ -68,7 +68,7 @@ const formatDate = (timestamp: Timestamp | Date | { seconds: number, nanoseconds
     } else {
         throw new Error('Invalid timestamp type');
     }
-    return format(date, 'yyyy/MM/dd HH:mm~');
+    return format(date, 'yyyy年MM月dd日 HH:mm発');
 };
 
 const PostListPage: React.FC = () => {
@@ -78,8 +78,26 @@ const PostListPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [userStatus, setUserStatus] = useState<string | null>(null);
+    const [windowWidth, setWindowWidth] = useState<number>(0); 
     const router = useRouter();
     const toast = useToast();
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const handleResize = () => {
+                setWindowWidth(window.innerWidth);
+            };
+    
+            setWindowWidth(window.innerWidth); // 初期値を設定
+            console.log('Window width:', window.innerWidth);
+    
+            window.addEventListener('resize', handleResize);
+    
+            return () => {
+                window.removeEventListener('resize', handleResize);
+            };
+        }
+    }, []);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -163,6 +181,18 @@ const PostListPage: React.FC = () => {
             const postSnapshot = await getDoc(postDocRef);
             if (postSnapshot.exists()) {
                 const postData = postSnapshot.data() as AinoriData;
+                if (postData.driver === userId) {
+                    console.error('Driver and passenger cannot be the same person');
+                    toast({
+                        title: "マッチが成立しませんでした",
+                        description: "自分自身とはマッチングできません。",
+                        status: "error",
+                        duration: 5000,
+                        isClosable: true,
+                    });
+                    setIsSubmitting(null);
+                    return;
+                }
                 if (postData.driver) {
                     const driverDocRef = doc(db, 'Users', postData.driver, 'Profile', 'Info');
                     const driverDoc = await getDoc(driverDocRef);
@@ -225,63 +255,205 @@ const PostListPage: React.FC = () => {
                         posts
                             .filter(post => post.status === '募集中') // "募集中" 状態のポストを再度フィルタリング
                             .map((post, index) => (
-                                <Box key={index} p="5" shadow="md" borderWidth="1px" width="100%" maxWidth="1000px" margin="auto">
-                                    <HStack>
-                                        <Box flex="3.5" borderRight="1px solid #ccc" pr="4">
-                                            <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
-                                                {post.driverData?.username}
+                                <Box key={index} p="5" shadow="md" borderWidth="1px" width="100%" maxWidth="600px" margin="auto" bg="gray.100">
+                                <VStack height="100%">
+                                    <Box width="100%" borderBottom="1px solid #ccc" pb="2" mb="2">
+                                        <HStack>
+                                            <Text sx={{ textAlign: 'center', fontSize: windowWidth <= 600 ? 'sm' : '2xl', fontWeight: 'bold' }}>
+                                            {post.goal_spot}まで
                                             </Text>
-                                            <HStack justifyContent="space-between">
-                                                <Box flex="0.75" textAlign="center">
-                                                    <Text><strong>{post.driverData?.gender}</strong></Text>
-                                                </Box>
-                                                <Box flex="0.75" textAlign="center">
-                                                    <Text><strong>{post.driverData?.year}</strong></Text>
-                                                </Box>
-                                            </HStack>
-                                            <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
-                                                {post.driverData?.laboratory}
-                                            </Text>
-                                            <HStack justifyContent="space-between">
-                                                <Box flex="0.75" textAlign="center">
-                                                    <Text><strong>日本語可否:</strong> {post.driverData?.japaneseProficiency}</Text>
-                                                </Box>
-                                                <Box flex="0.75" textAlign="center">
-                                                    <Text><strong>喫煙:</strong> {post.driverData?.smoking}</Text>
-                                                </Box>
-                                            </HStack>
-                                        </Box>
-                                        <Box flex="6.5" pl="4">
-                                            <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}>
-                                                {post.start_time instanceof Timestamp ? formatDate(post.start_time) : post.start_time.toString()}
-                                            </Text>
-                                            <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}><strong>{post.start_spot} - {post.goal_spot}</strong></Text>
-                                            <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}><strong>車: {post.driverInfo?.carType}</strong></Text>
-                                            <Text><strong>備考:</strong> {post.remarks}</Text>
-                                            <Box display="flex" justifyContent="flex-end">
-                                                <Button
-                                                    marginTop='4'
-                                                    color='white'
-                                                    bg='teal.400'
-                                                    isLoading={isSubmitting === post.id}
-                                                    onClick={() => handleRegisterClick(post.id)}
-                                                    paddingX='auto'
-                                                    _hover={{
-                                                        borderColor: 'transparent',
-                                                        boxShadow: '0 7px 10px rgba(0, 0, 0, 0.3)',
-                                                    }}
-                                                    isDisabled={userStatus !== null}
-                                                    _disabled={{
-                                                        bg: 'gray.400', 
-                                                        cursor: 'not-allowed', 
-                                                    }}
-                                                >
-                                                    リクエスト
-                                                </Button>
+                                            <Spacer />
+                                            <Text sx={{ textAlign: 'center', fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
+                                            <Box as="span" fontSize="14px">
+                                            {formatDate(post.start_time)}
                                             </Box>
-                                        </Box>
-                                    </HStack>
-                                </Box>
+                                            </Text>
+                                        </HStack>
+                                    </Box>
+                                    <Box flex="3" width="100%">
+                                        <HStack height="100%">
+                                        <Box flex="1" textAlign="center" display="flex" flexDirection="column" alignItems="center" justifyContent="center">
+                                                <Image src="/icons/profile_icon.svg" alt="Profile Icon" width={100} height={100} />
+                                                <Spacer />
+                                                <Text sx={{ textAlign: 'center', fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold', wordBreak: 'break-all' }}>
+                                                    {post.driverData?.username}
+                                                </Text>
+                                            </Box>
+                                            <Box flex="3" width="100%">
+                                                <VStack height="100%">
+                                                    <Box flex="3" width="100%">
+                                                    <HStack height="100%" alignItems="flex-start">
+                                                    <Box flex="1">
+                                                        <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
+                                                            性別：
+                                                            {post.driverData?.gender === 'male' && '男性'}
+                                                            {post.driverData?.gender === 'female' && '女性'}
+                                                            {post.driverData?.gender === 'other' && 'その他'}
+                                                        </Text>
+                                                        <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>学年：<strong>{post.driverData?.year}</strong></Text>
+                                                        <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
+                                                            研究室：
+                                                            <Box as="span" fontSize={windowWidth <= 600 ? '10px' : 'sm'}>
+                                                                {post.driverData?.laboratory}
+                                                            </Box>
+                                                        </Text>
+                                                    </Box>
+                                                    <Box flex="1">
+                                                        <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
+                                                            車種: {post.driverInfo?.carType}
+                                                        </Text>
+                                                        <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
+                                                            集合場所: {post.start_spot}
+                                                        </Text>
+                                                        <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
+                                                            備考:{post.remarks}
+                                                        </Text>
+                                                    </Box>
+                                                </HStack>
+                                                    </Box>
+                                                    <Box flex="1" width="100%">
+                                                        <HStack>
+                                                        {windowWidth > 600 && <Spacer />}
+                                                        <Image 
+                                                            src={post.driverData?.smoking ? "/icons/yes_smoke.png" : "/icons/no_smoke.png"} 
+                                                            alt="Smoking Icon" 
+                                                            width={windowWidth <= 600 ? 30 : 50} 
+                                                            height={windowWidth <= 600 ? 30 : 50} 
+                                                        />
+                                                        {windowWidth > 600 && <Spacer />}
+                                                        <Image 
+                                                            src={post.driverInfo?.foodAndDrink ? "/icons/yes_food.png" : "/icons/no_food.png"} 
+                                                            alt="Food Icon" 
+                                                            width={windowWidth <= 600 ? 30 : 50} 
+                                                            height={windowWidth <= 600 ? 30 : 50} 
+                                                        />
+                                                        {windowWidth > 600 && <Spacer />}
+                                                        <Image 
+                                                            src={post.driverInfo?.hasPets ? "/icons/yes_pet.png" : "/icons/no_pet.png"} 
+                                                            alt="Pet Icon" 
+                                                            width={windowWidth <= 600 ? 30 : 50} 
+                                                            height={windowWidth <= 600 ? 30 : 50} 
+                                                        />
+                                                        {windowWidth > 600 && <Spacer />}
+                                                        <Image 
+                                                            src={post.driverData?.japaneseProficiency ? "/icons/yes_japanese.png" : "/icons/no_japanese.png"} 
+                                                            alt="Japanese Icon" 
+                                                            width={windowWidth <= 600 ? 30 : 50} 
+                                                            height={windowWidth <= 600 ? 30 : 50} 
+                                                        />
+                                                        {windowWidth > 600 && <Spacer />}
+                                                        {windowWidth > 600 && <Spacer />}
+                                                            <Button
+                                                                color='white'
+                                                                bg='teal.400'
+                                                                isLoading={isSubmitting === post.id}
+                                                                onClick={() => handleRegisterClick(post.id)}
+                                                                px={4}
+                                                                py={2}
+                                                                fontSize={windowWidth <= 600 ? 'xs' : 'xl'}
+                                                                _hover={{
+                                                                    borderColor: 'transparent',
+                                                                    boxShadow: '0 7px 10px rgba(0, 0, 0, 0.3)',
+                                                                }}
+                                                                isDisabled={userStatus !== null}
+                                                                _disabled={{
+                                                                    bg: 'gray.400', 
+                                                                    cursor: 'not-allowed', 
+                                                                }}
+                                                            >
+                                                                相乗り申請
+                                                            </Button>
+                                                        </HStack>
+                                                            
+                                                    </Box>
+                                                </VStack>
+                                            </Box>
+                                        </HStack>
+                                    </Box>
+                                </VStack>
+                            </Box>
+                            
+
+                                // <Box key={index} p="5" shadow="md" borderWidth="1px" width="100%" maxWidth="600px" margin="auto" bg="gray.100">
+                                //     <VStack>
+                                //         <Box flex="1" width="100%" borderBottom="1px solid #ccc" pb="2" mb="2">
+                                //             <HStack>
+                                //                 <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}>
+                                //                 {post.goal_spot}まで
+                                //                 </Text>
+                                //                 <Spacer />
+                                //                 <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
+                                //                 {formatDate(post.start_time)}
+                                //                 </Text>
+                                //             </HStack>
+                                //         </Box>
+                                //         <Box flex="3">
+                                //         <HStack>
+                                //         <Box flex="2">
+                                //             <Image src="/profile_icon.svg" alt="Profile Icon" width={50} height={50} />
+                                //         </Box>
+                                //         <Box flex="3">
+                                //         {/* <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
+                                //                 {post.driverData?.username}
+                                //             </Text> */}
+                                //             {/* <HStack justifyContent="space-between">
+                                //                 <Box flex="0.75" textAlign="center">
+                                //                     <Text><strong>{post.driverData?.gender}</strong></Text>
+                                //                 </Box>
+                                //                 <Box flex="0.75" textAlign="center">
+                                //                     <Text><strong>{post.driverData?.year}</strong></Text>
+                                //                 </Box>
+                                //             </HStack> */}
+                                //         </Box>
+                                //         <Box flex="3">
+
+                                //         </Box>
+                                        
+                                            
+                                //             {/* <Text sx={{ textAlign: 'center', fontSize: 'xl', fontWeight: 'bold' }}>
+                                //                 {post.driverData?.laboratory}
+                                //             </Text>
+                                //             <HStack justifyContent="space-between">
+                                //                 <Box flex="0.75" textAlign="center">
+                                //                     <Text><strong>日本語可否:</strong> {post.driverData?.japaneseProficiency}</Text>
+                                //                 </Box>
+                                //                 <Box flex="0.75" textAlign="center">
+                                //                     <Text><strong>喫煙:</strong> {post.driverData?.smoking}</Text>
+                                //                 </Box>
+                                //             </HStack>
+                                //             <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}>
+                                //                 {post.start_time instanceof Timestamp ? formatDate(post.start_time) : post.start_time.toString()}
+                                //             </Text>
+                                //             <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}><strong>{post.start_spot} - {post.goal_spot}</strong></Text>
+                                //             <Text sx={{ textAlign: 'center', fontSize: '2xl', fontWeight: 'bold' }}><strong>車: {post.driverInfo?.carType}</strong></Text>
+                                //             <Text><strong>備考:</strong> {post.remarks}</Text>
+                                //             <Box display="flex" justifyContent="flex-end">
+                                //                 <Button
+                                //                     marginTop='4'
+                                //                     color='white'
+                                //                     bg='teal.400'
+                                //                     isLoading={isSubmitting === post.id}
+                                //                     onClick={() => handleRegisterClick(post.id)}
+                                //                     paddingX='auto'
+                                //                     _hover={{
+                                //                         borderColor: 'transparent',
+                                //                         boxShadow: '0 7px 10px rgba(0, 0, 0, 0.3)',
+                                //                     }}
+                                //                     isDisabled={userStatus !== null}
+                                //                     _disabled={{
+                                //                         bg: 'gray.400', 
+                                //                         cursor: 'not-allowed', 
+                                //                     }}
+                                //                 >
+                                //                     リクエスト
+                                //                 </Button>
+                                //         </Box> */}
+                                //     </HStack>
+
+                                //         </Box>
+                                    
+                                //     </VStack>
+                                // </Box>
                             ))
                     ) : (
                         <Text>ポストが見つかりませんでした。</Text>
