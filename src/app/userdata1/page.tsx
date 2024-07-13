@@ -18,6 +18,7 @@ import {
   Radio,
   RadioGroup,
   useToast,
+  FormErrorMessage,
 } from '../../common/design';
 
 type ProfileData = {
@@ -71,7 +72,6 @@ const ProfilePage = () => {
     const { name, value, type } = event.target;
 
     if (name === 'carNumber') {
-      // 半角数字のみを受け付ける正規表現
       const regex = /^[0-9]*$/;
       if (!regex.test(value)) {
         setCarNumberError('半角数字で入力してください');
@@ -89,12 +89,32 @@ const ProfilePage = () => {
   };
 
   const handleSave = async () => {
-    try {
-      if (!auth.currentUser) {
-        console.error('ユーザーがログインしていません');
-        return;
-      }
+    if (!auth.currentUser) {
+      console.error('ユーザーがログインしていません');
+      return;
+    }
 
+    // 必須項目チェック
+    if (
+      profile.carType === '' ||
+      profile.carNumber === '' ||
+      profile.transmission === '' ||
+      carNumberError !== '' ||
+      profile.maxCapacity === null ||
+      profile.foodAndDrink === null ||
+      profile.hasPets === null
+    ) {
+      toast({
+        title: 'エラー',
+        description: 'すべての項目を正しく入力してください。',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
       const userRef = doc(db, 'Users', auth.currentUser.uid, 'Profile', 'DriverInfo');
       await setDoc(userRef, profile);
 
@@ -105,9 +125,8 @@ const ProfilePage = () => {
         duration: 5000,
         isClosable: true,
       });
-      
-      setIsEditing(false);
 
+      setIsEditing(false);
       console.log('プロフィールが Users/Profile/DriverInfo に保存されました');
     } catch (error) {
       console.error('プロフィールの保存中にエラーが発生しました:', error);
@@ -131,48 +150,50 @@ const ProfilePage = () => {
         </Flex>
         {isEditing ? (
           <VStack spacing="4" alignItems="left" as="form">
-            <FormControl>
+            <FormControl isInvalid={profile.carType === ''}>
               <FormLabel>車種</FormLabel>
               <Input
                 type="text"
                 name="carType"
                 value={profile.carType}
                 onChange={handleInputChange}
-                borderColor="black" // 入力欄を黒く囲む
+                borderColor="black"
               />
+              {profile.carType === '' && <FormErrorMessage>必須項目です</FormErrorMessage>}
             </FormControl>
-            <FormControl>
+            <FormControl isInvalid={profile.carNumber === '' || carNumberError !== ''}>
               <FormLabel>ナンバー</FormLabel>
               <Input
                 type="text"
                 name="carNumber"
                 value={profile.carNumber}
                 onChange={handleInputChange}
-                borderColor="black" // 入力欄を黒く囲む
+                borderColor="black"
               />
-              {carNumberError && (
-                <Text color="red">{carNumberError}</Text>
-              )}
+              {carNumberError && <FormErrorMessage>{carNumberError}</FormErrorMessage>}
+              {profile.carNumber === '' && !carNumberError && <FormErrorMessage>必須項目です</FormErrorMessage>}
             </FormControl>
-            <FormControl>
+            <FormControl isInvalid={profile.transmission === ''}>
               <FormLabel>トランスミッション</FormLabel>
               <Select
                 name="transmission"
                 value={profile.transmission}
                 onChange={handleInputChange}
-                borderColor="black" // 入力欄を黒く囲む
+                borderColor="black"
               >
+                <option value="">選択してください</option>
                 <option value="マニュアル">マニュアル</option>
                 <option value="オートマチック">オートマチック</option>
               </Select>
+              {profile.transmission === '' && <FormErrorMessage>必須項目です</FormErrorMessage>}
             </FormControl>
-            <FormControl>
+            <FormControl isInvalid={profile.maxCapacity === null}>
               <FormLabel>上限人数</FormLabel>
               <Select
                 name="maxCapacity"
                 value={profile.maxCapacity.toString()}
                 onChange={handleInputChange}
-                borderColor="black" // 入力欄を黒く囲む
+                borderColor="black"
               >
                 {[...Array(7)].map((_, index) => (
                   <option key={index} value={(index + 2).toString()}>
@@ -180,8 +201,9 @@ const ProfilePage = () => {
                   </option>
                 ))}
               </Select>
+              {profile.maxCapacity === null && <FormErrorMessage>必須項目です</FormErrorMessage>}
             </FormControl>
-            <FormControl>
+            <FormControl isInvalid={profile.foodAndDrink === null}>
               <FormLabel>飲食</FormLabel>
               <RadioGroup
                 name="foodAndDrink"
@@ -193,8 +215,9 @@ const ProfilePage = () => {
                   <Radio value="false" borderColor="black">不可</Radio>
                 </Flex>
               </RadioGroup>
+              {profile.foodAndDrink === null && <FormErrorMessage>必須項目です</FormErrorMessage>}
             </FormControl>
-            <FormControl>
+            <FormControl isInvalid={profile.hasPets === null}>
               <FormLabel>ペット</FormLabel>
               <RadioGroup
                 name="hasPets"
@@ -206,6 +229,7 @@ const ProfilePage = () => {
                   <Radio value="false" borderColor="black">飼っていない</Radio>
                 </Flex>
               </RadioGroup>
+              {profile.hasPets === null && <FormErrorMessage>必須項目です</FormErrorMessage>}
             </FormControl>
             <Button onClick={handleSave} colorScheme="teal">
               保存
