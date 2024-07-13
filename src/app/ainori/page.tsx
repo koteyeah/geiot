@@ -91,11 +91,12 @@ export default function Page() {
       if (user) {
         try {
           console.log("ユーザーが見つかりました" + user.uid);
-          const userDoc = await getDoc(doc(db, "users", user.uid));
+          const userDoc = await getDoc(doc(db, "Users", user.uid));
           if (userDoc.exists()) {
+            console.log("ユーザーテーブルを発見しました。");
             const userData = userDoc.data();
             setUser(userData);
-            const isAinori = userData!.isAinori;
+            const isAinori = userData!.status;
             if (isAinori) {
               console.log("相乗りが存在します" + isAinori);
               const ainoriDoc = await getDoc(doc(db, "ainories", isAinori));
