@@ -17,7 +17,8 @@ import {
   Text,
 } from '../../common/design'
 import { db, auth } from '../../lib/firebase/config'
-import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore'
+import { doc, getDoc, addDoc, Timestamp, collection, updateDoc, query, where, getDocs } from 'firebase/firestore'
+import { onAuthStateChanged } from 'firebase/auth'
 
 // フォームで使用する変数の型を定義
 type formInputs = {
@@ -39,33 +40,42 @@ export default function DriverRegistrationScreen() {
   const { handleSubmit, register, formState: { errors, isSubmitting } } = useForm<formInputs>()
   const router = useRouter()
   const [isDriverProfileRegistered, setIsDriverProfileRegistered] = useState(true)
+  const [isAlreadyPosted, setIsAlreadyPosted] = useState(false)
   
   useEffect(() => {
-    const checkDriverProfile = async () => {
-      const user = auth.currentUser
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userUid = user.uid
         const docRef = doc(db, 'Users', userUid, 'Profile', 'Info')
         const docSnap = await getDoc(docRef)
-        
+        console.log('Driver profile docSnap:', docSnap)
         if (docSnap.exists()) {
           const data = docSnap.data()
-          if (data.driverProfile === "未登録") {
+          console.log('Driver profile data:', data)
+          if (data.driverProfile === false) { // driverProfileがfalseの場合
             setIsDriverProfileRegistered(false)
           }
         } else {
           setIsDriverProfileRegistered(false)
         }
-      }
-    }
-    
-    checkDriverProfile()
-  }, [])
+      }});
+    return () => unsubscribe()
+
+    }, [])
 
   const onSubmit = handleSubmit(async (data) => {
     const user = auth.currentUser
     if (user) {
       const userUid = user.uid
+
+      // 既に投稿済みかどうかをチェック
+      const driverQuery = query(collection(db, 'ainories'), where('driver', '==', userUid))
+      const querySnapshot = await getDocs(driverQuery)
+
+      if (!querySnapshot.empty) {
+        setIsAlreadyPosted(true)
+        return
+      }
 
       // 出発時刻を統合してFirebaseのTimestampとして保存
       const start_time = Timestamp.fromDate(new Date(
@@ -92,10 +102,15 @@ export default function DriverRegistrationScreen() {
         passenger_rate: null,
       }
 
-      const driverRef = doc(db, 'ainories', userUid) // ドライバーUIDをキーとしてドキュメントを作成
+      const driverCollectionRef = collection(db, 'ainories') // コレクションを指定
+      
+      // 新しいドキュメントを追加し、そのドキュメントIDを取得
+      const docRef = await addDoc(driverCollectionRef, driverData)
+      const docId = docRef.id
 
-      // データが既に存在する場合は更新し、存在しない場合は新規作成
-      await setDoc(driverRef, driverData, { merge: true })
+      // UsersコレクションのUUIDドキュメントのstatusフィールドにainoriesのドキュメントIDを更新
+      const userProfileRef = doc(db, 'Users', userUid)
+      await updateDoc(userProfileRef, { status: docId })
 
       console.log('Driver data submitted and saved:', driverData)
       router.push('/home')  // 登録後に home に遷移する
@@ -276,12 +291,15 @@ export default function DriverRegistrationScreen() {
                 borderColor: 'transparent',
                 boxShadow: '0 7px 10px rgba(0, 0, 0, 0.3)',
               }}
-              isDisabled={!isDriverProfileRegistered}
+              isDisabled={!isDriverProfileRegistered || isAlreadyPosted}
             >
               登録 (Register)
             </Button>
             {!isDriverProfileRegistered && (
               <Text color='red.500'>ドライバー情報が未登録です</Text>
+            )}
+            {isAlreadyPosted && (
+              <Text color='red.500'>既に投稿済みです</Text>
             )}
           </VStack>
         </form>
