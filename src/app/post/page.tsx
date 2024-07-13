@@ -1,7 +1,8 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { useRouter } from 'next/navigation'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   Flex,
@@ -15,66 +16,67 @@ import {
   Box,
   Textarea,
   Text,
-} from '../../common/design'
-import { db, auth } from '../../lib/firebase/config'
-import { doc, getDoc, addDoc, Timestamp, collection, updateDoc, query, where, getDocs } from 'firebase/firestore'
-import { onAuthStateChanged } from 'firebase/auth'
+} from '../../common/design';
+import { db, auth } from '../../lib/firebase/config';
+import { doc, getDoc, addDoc, Timestamp, collection, updateDoc, query, where, getDocs } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import Footer from '../../common/footer/Footer'; // フッターコンポーネントをインポート
 
 // フォームで使用する変数の型を定義
 type formInputs = {
-  year: string
-  month: string
-  day: string
-  hour: string
-  minute: string
-  goal_spot: string
-  start_spot: string
-  remarks: string
-}
+  year: string;
+  month: string;
+  day: string;
+  hour: string;
+  minute: string;
+  goal_spot: string;
+  start_spot: string;
+  remarks: string;
+};
 
 /** ドライバー登録画面
  * @screenname DriverRegistrationScreen
  * @description ユーザーがドライバー登録を行う画面
  */
 export default function DriverRegistrationScreen() {
-  const { handleSubmit, register, formState: { errors, isSubmitting } } = useForm<formInputs>()
-  const router = useRouter()
-  const [isDriverProfileRegistered, setIsDriverProfileRegistered] = useState(true)
-  const [isAlreadyPosted, setIsAlreadyPosted] = useState(false)
-  
+  const { handleSubmit, register, formState: { errors, isSubmitting } } = useForm<formInputs>();
+  const router = useRouter();
+  const [isDriverProfileRegistered, setIsDriverProfileRegistered] = useState(true);
+  const [isAlreadyPosted, setIsAlreadyPosted] = useState(false);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userUid = user.uid
-        const docRef = doc(db, 'Users', userUid, 'Profile', 'Info')
-        const docSnap = await getDoc(docRef)
-        console.log('Driver profile docSnap:', docSnap)
+        const userUid = user.uid;
+        const docRef = doc(db, 'Users', userUid, 'Profile', 'Info');
+        const docSnap = await getDoc(docRef);
+        console.log('Driver profile docSnap:', docSnap);
         if (docSnap.exists()) {
-          const data = docSnap.data()
-          console.log('Driver profile data:', data)
+          const data = docSnap.data();
+          console.log('Driver profile data:', data);
           if (data.driverProfile === false) { // driverProfileがfalseの場合
-            setIsDriverProfileRegistered(false)
+            setIsDriverProfileRegistered(false);
           }
         } else {
-          setIsDriverProfileRegistered(false)
+          setIsDriverProfileRegistered(false);
         }
-      }});
-    return () => unsubscribe()
-
-    }, [])
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const onSubmit = handleSubmit(async (data) => {
-    const user = auth.currentUser
+    const user = auth.currentUser;
     if (user) {
-      const userUid = user.uid
+      const userUid = user.uid;
 
       // 既に投稿済みかどうかをチェック
-      const driverQuery = query(collection(db, 'ainories'), where('driver', '==', userUid))
-      const querySnapshot = await getDocs(driverQuery)
+      const driverQuery = query(collection(db, 'ainories'), where('driver', '==', userUid));
+      const querySnapshot = await getDocs(driverQuery);
 
       if (!querySnapshot.empty) {
-        setIsAlreadyPosted(true)
-        return
+        setIsAlreadyPosted(true);
+        return;
       }
 
       // 出発時刻を統合してFirebaseのTimestampとして保存
@@ -84,7 +86,7 @@ export default function DriverRegistrationScreen() {
         parseInt(data.day),
         parseInt(data.hour),
         parseInt(data.minute)
-      ))
+      ));
 
       const driverData = {
         driver: userUid,
@@ -100,27 +102,27 @@ export default function DriverRegistrationScreen() {
         passenger: null,
         passenger_feedback: null,
         passenger_rate: null,
-      }
+      };
 
-      const driverCollectionRef = collection(db, 'ainories') // コレクションを指定
+      const driverCollectionRef = collection(db, 'ainories'); // コレクションを指定
       
       // 新しいドキュメントを追加し、そのドキュメントIDを取得
-      const docRef = await addDoc(driverCollectionRef, driverData)
-      const docId = docRef.id
+      const docRef = await addDoc(driverCollectionRef, driverData);
+      const docId = docRef.id;
 
       // UsersコレクションのUUIDドキュメントのstatusフィールドにainoriesのドキュメントIDを更新
-      const userProfileRef = doc(db, 'Users', userUid)
-      await updateDoc(userProfileRef, { status: docId })
+      const userProfileRef = doc(db, 'Users', userUid);
+      await updateDoc(userProfileRef, { status: docId });
 
-      console.log('Driver data submitted and saved:', driverData)
-      router.push('/home')  // 登録後に home に遷移する
+      console.log('Driver data submitted and saved:', driverData);
+      router.push('/home');  // 登録後に home に遷移する
     } else {
-      console.error('User not logged in')
+      console.error('User not logged in');
     }
-  })
+  });
 
   return (
-    <Flex height='100vh' justifyContent='center' alignItems='center'>
+    <Flex height='100vh' justifyContent='center' alignItems='center' flexDirection='column'>
       <VStack spacing='1'>
         <Heading>ドライブ登録</Heading>
         <Text fontSize='sm'>Drive Registration</Text>
@@ -304,6 +306,7 @@ export default function DriverRegistrationScreen() {
           </VStack>
         </form>
       </VStack>
+      <Footer /> {/* フッターコンポーネントを追加 */}
     </Flex>
-  )
+  );
 }
