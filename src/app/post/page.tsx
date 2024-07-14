@@ -81,7 +81,7 @@ export default function DriverRegistrationScreen() {
 
       // 出発時刻を統合してFirebaseのTimestampとして保存
       const start_time = Timestamp.fromDate(new Date(
-        parseInt(data.year),
+        2024,
         parseInt(data.month) - 1,
         parseInt(data.day),
         parseInt(data.hour),
@@ -133,21 +133,6 @@ export default function DriverRegistrationScreen() {
                 出発時刻 (departure time)
               </FormLabel>
               <Flex alignItems="center">
-                <Box mr='2'>
-                  <Select
-                    id='year'
-                    autoComplete='year'
-                    {...register('year', {
-                      required: '必須項目です',
-                    })}
-                    width='90px'
-                  >
-                    <option value=''>年</option>
-                    <option value='2024'>2024</option>
-                    <option value='2025'>2025</option>
-                  </Select>
-                </Box>
-                <Box mr='2'>年</Box>
                 <Box mr='2'>
                   <Select
                     id='month'
