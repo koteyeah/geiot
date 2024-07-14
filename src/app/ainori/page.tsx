@@ -1,9 +1,24 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { Text, Button, Flex, Heading, VStack } from "../../common/design";
+import {
+  Text,
+  Button,
+  Flex,
+  Heading,
+  VStack,
+  useDisclosure,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+} from "../../common/design";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/src/lib/firebase/config";
+
 import {
   getDoc,
   doc,
@@ -27,6 +42,8 @@ export default function Page() {
   >(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userType, setUserType] = useState<"ドライバー" | "乗客" | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const router = useRouter();
   let isProcessing = false;
 
@@ -173,7 +190,6 @@ export default function Page() {
         相乗り処理は行われていません！<br></br>
         掲示板から相乗りを利用してみよう。
       </Heading>
-      // <StepperComponent status={"到着"} />
     );
   }
   if (status == "募集中") {
@@ -181,23 +197,42 @@ export default function Page() {
       <>
         <Text>現在相乗りを募集しています。</Text>
         <Text>ここに相乗り情報を表示。</Text>
-        <Button
-          onClick={async () => {
-            await deleteDoc(doc(db, "ainories", ainoriKey));
-            await updateDoc(doc(db, "Users", userKey), {
-              status: null,
-            });
-            if (otherUserKey != "") {
-              await updateDoc(doc(db, "Users", otherUserKey), {
-                status: null,
-              });
-            }
-            alert("取引をキャンセルしました。");
-            router.push("/postList");
-          }}
-        >
-          取引をキャンセル
-        </Button>
+        <>
+          <Button onClick={onOpen}>取引をキャンセル</Button>
+
+          <Modal isOpen={isOpen} onClose={onClose}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>本当にキャンセルしますか？</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>ここに胸を打つメッセージを表示する</ModalBody>
+
+              <ModalFooter>
+                <Button colorScheme="blue" mr={3} onClick={onClose}>
+                  Close
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={async () => {
+                    await deleteDoc(doc(db, "ainories", ainoriKey));
+                    await updateDoc(doc(db, "Users", userKey), {
+                      status: null,
+                    });
+                    if (otherUserKey != "") {
+                      await updateDoc(doc(db, "Users", otherUserKey), {
+                        status: null,
+                      });
+                    }
+                    alert("取引をキャンセルしました。");
+                    router.push("/postList");
+                  }}
+                >
+                  キャンセルする
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        </>
       </>
     );
   }
@@ -257,23 +292,42 @@ export default function Page() {
           </>
         )}
         {status == "成立" && (
-          <Button
-            onClick={async () => {
-              await deleteDoc(doc(db, "ainories", ainoriKey));
-              await updateDoc(doc(db, "Users", userKey), {
-                status: null,
-              });
-              if (otherUserKey != "") {
-                await updateDoc(doc(db, "Users", otherUserKey), {
-                  status: null,
-                });
-              }
-              alert("取引をキャンセルしました。");
-              router.push("/postList");
-            }}
-          >
-            取引をキャンセル
-          </Button>
+          <>
+            <Button onClick={onOpen}>取引をキャンセル</Button>
+
+            <Modal isOpen={isOpen} onClose={onClose}>
+              <ModalOverlay />
+              <ModalContent>
+                <ModalHeader>本当にキャンセルしますか？</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>ここに胸を打つメッセージを表示する</ModalBody>
+
+                <ModalFooter>
+                  <Button colorScheme="ghost" mr={3} onClick={onClose}>
+                    Close
+                  </Button>
+                  <Button
+                    variant="blue"
+                    onClick={async () => {
+                      await deleteDoc(doc(db, "ainories", ainoriKey));
+                      await updateDoc(doc(db, "Users", userKey), {
+                        status: null,
+                      });
+                      if (otherUserKey != "") {
+                        await updateDoc(doc(db, "Users", otherUserKey), {
+                          status: null,
+                        });
+                      }
+                      alert("取引をキャンセルしました。");
+                      router.push("/postList");
+                    }}
+                  >
+                    キャンセルする
+                  </Button>
+                </ModalFooter>
+              </ModalContent>
+            </Modal>
+          </>
         )}
       </VStack>
     </Flex>
