@@ -19,6 +19,8 @@ export default function Page() {
   const [userData, setUser] = useState<DocumentData | null>(null);
   const [userKey, setUserKey] = useState<string>("");
   const [otherUserData, setOtherUser] = useState<DocumentData | null>(null);
+  const [otherUserInfo, setOtherUserInfo] = useState<DocumentData | null>(null);
+  const [otherUserDriverInfo, setOtherUserDriverInfo] = useState<DocumentData | null>(null);
   const [otherUserKey, setOtherUserKey] = useState<string>("");
   const [ainoriData, setAinori] = useState<DocumentData | null>(null);
   const [ainoriKey, setAinoriKey] = useState<string>("");
@@ -130,25 +132,42 @@ export default function Page() {
                 setUserType(
                   ainoriData.driver === user.uid ? "ドライバー" : "乗客"
                 );
-
-                if (status === "成立" || status === "相乗り中") {
-                  switch (userType) {
+                console.log(ainoriData);
+                if (ainoriData.status === "成立" || ainoriData.status === "相乗り中") {
+                  switch (ainoriData.driver === user.uid ? "ドライバー" : "乗客") {
                     case "ドライバー":
                       const passengerDoc = await getDoc(
-                        doc(db, "users", ainoriData.passenger)
+                        doc(db, "Users", ainoriData.passenger)
+                      );
+                      const passengerInfoDoc = await getDoc(
+                        doc(db, "Users", ainoriData.passenger, "Profile", "Info")
                       );
                       if (passengerDoc.exists()) {
-                        setOtherUser(passengerDoc.data());
                         setOtherUserKey(passengerDoc.id);
+                      }
+                      if (passengerInfoDoc.exists()) {
+                        setOtherUserInfo(passengerInfoDoc.data());
+
                       }
                       break;
                     case "乗客":
-                      const driverDoc = await getDoc(
-                        doc(db, "users", ainoriData.driver)
+                      const otherDoc = await getDoc(
+                        doc(db, "Users", ainoriData.driver)
                       );
-                      if (driverDoc.exists()) {
-                        setOtherUser(driverDoc.data());
-                        setOtherUserKey(driverDoc.id);
+                      const otherInfoDoc = await getDoc(
+                        doc(db, "Users", ainoriData.driver, "Profile", "Info")
+                      );
+                      const otherDriverInfoDoc = await getDoc(
+                        doc(db, "Users", ainoriData.driver, 'Profile', 'DriverInfo')
+                      );
+                      if (otherDoc.exists()) {
+                        setOtherUserKey(otherDoc.id);
+                      }
+                      if (otherInfoDoc.exists()) {
+                        setOtherUserInfo(otherInfoDoc.data());
+                      }
+                      if (otherDriverInfoDoc.exists()) {
+                        setOtherUserDriverInfo(otherDriverInfoDoc.data());
                       }
                       break;
                   }
@@ -206,8 +225,18 @@ export default function Page() {
     <Flex align="center" justify="center" height="100vh">
       <VStack spacing={5}>
         {status && <StepperComponent status={status} />}
-        {(status == "成立" || status == "相乗り中") && (
-          <Text>ここに取引相手のプロフィールを表示</Text>
+        {(status === "成立" || status === "相乗り中") && (
+          <>
+            {otherUserInfo && ainoriData && (
+              <ProfileCard
+                ainoriData={ainoriData}
+                ainoriKey={ainoriKey}
+                otherUserInfo={otherUserInfo}
+                otherUserDriverInfo={otherUserDriverInfo || undefined}
+              />
+            )}
+          </>
+          
         )}
         {status == "成立" && (
           <>
