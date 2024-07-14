@@ -22,7 +22,9 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.52.0",
+    "react-icons": "^5.2.1",
     "react-router-dom": "^6.24.1",
+    "react-youtube": "^10.1.0",
     "styled-components": "^6.1.11"
   },
   "devDependencies": {
@@ -39,5 +41,5 @@
   "main": "index.js",
   "author": "",
   "license": "ISC",
-  "description": "npm install @chakra-ui/react @emotion/react @emotion/styled framer-motion npm install react-icons"
+  "description": ""
 }
