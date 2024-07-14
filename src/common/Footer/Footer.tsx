@@ -2,7 +2,7 @@
 
 import React from 'react';
 import styled from 'styled-components';
-import { FaVideo, FaTruck, FaUserFriends, FaSearch, FaCog } from 'react-icons/fa';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 
@@ -17,23 +17,33 @@ const Footer: React.FC = () => {
   return (
     <FooterContainer>
       <FooterItem active={pathname === '/post'} onClick={() => handleNavigation('/post')}>
-        <FaTruck />
+        <IconWrapper>
+          <Image src="/icons/ainori.svg" alt="投稿" width={50} height={50} />
+        </IconWrapper>
         <FooterLabel active={pathname === '/post'}>投稿</FooterLabel>
       </FooterItem>
       <FooterItem active={pathname === '/postList'} onClick={() => handleNavigation('/postList')}>
-        <FaSearch />
-        <FooterLabel active={pathname === '/postList'}>探す</FooterLabel>
+        <IconWrapper>
+          <Image src="/icons/postlist.svg" alt="探す" width={24} height={24} />
+        </IconWrapper>
+        <FooterLabel active={pathname === '/postList'}>掲示板</FooterLabel>
       </FooterItem>
       <FooterItem active={pathname === '/ainori'} onClick={() => handleNavigation('/ainori')}>
-        <FaUserFriends />
+        <IconWrapper>
+          <Image src="/icons/seiritsu.svg" alt="マッチング" width={24} height={24} />
+        </IconWrapper>
         <FooterLabel active={pathname === '/ainori'}>マッチング</FooterLabel>
       </FooterItem>
       <FooterItem active={pathname === '/add'} onClick={() => handleNavigation('/add')}>
-        <FaVideo />
+        <IconWrapper>
+          <Image src="/icons/add.svg" alt="広告" width={24} height={24} />
+        </IconWrapper>
         <FooterLabel active={pathname === '/add'}>広告</FooterLabel>
       </FooterItem>
       <FooterItem active={pathname === '/userdata'} onClick={() => handleNavigation('/userdata')}>
-        <FaCog />
+        <IconWrapper>
+          <Image src="/icons/setting.svg" alt="設定" width={24} height={24} />
+        </IconWrapper>
         <FooterLabel active={pathname === '/userdata'}>設定</FooterLabel>
       </FooterItem>
     </FooterContainer>
@@ -70,4 +80,12 @@ const FooterLabel = styled.span<FooterItemProps>`
   font-size: 12px;
   margin-top: 4px;
   color: ${({ active }) => (active ? '#38B2AC' : '#000')};
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
 `;
