@@ -225,7 +225,7 @@ const PostListPage: React.FC = () => {
       }
       await runTransaction(db, async (transaction) => {
         // ainoriesテーブルの更新
-        transaction.update(postDocRef, { passenger: userId, status: "成立中" });
+        transaction.update(postDocRef, { passenger: userId, status: "成立" });
         // Usersテーブルの更新
         transaction.update(userDocRef, { status: postId });
         setUserStatus(postId);
