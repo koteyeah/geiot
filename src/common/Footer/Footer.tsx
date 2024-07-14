@@ -16,21 +16,21 @@ const Footer: React.FC = () => {
 
   return (
     <FooterContainer>
-      <FooterItem active={pathname === '/add'} onClick={() => handleNavigation('/add')}>
-        <FaVideo />
-        <FooterLabel active={pathname === '/add'}>広告</FooterLabel>
-      </FooterItem>
       <FooterItem active={pathname === '/post'} onClick={() => handleNavigation('/post')}>
         <FaTruck />
         <FooterLabel active={pathname === '/post'}>投稿</FooterLabel>
+      </FooterItem>
+      <FooterItem active={pathname === '/postList'} onClick={() => handleNavigation('/postList')}>
+        <FaSearch />
+        <FooterLabel active={pathname === '/postList'}>探す</FooterLabel>
       </FooterItem>
       <FooterItem active={pathname === '/ainori'} onClick={() => handleNavigation('/ainori')}>
         <FaUserFriends />
         <FooterLabel active={pathname === '/ainori'}>マッチング</FooterLabel>
       </FooterItem>
-      <FooterItem active={pathname === '/postList'} onClick={() => handleNavigation('/postList')}>
-        <FaSearch />
-        <FooterLabel active={pathname === '/postList'}>探す</FooterLabel>
+      <FooterItem active={pathname === '/add'} onClick={() => handleNavigation('/add')}>
+        <FaVideo />
+        <FooterLabel active={pathname === '/add'}>広告</FooterLabel>
       </FooterItem>
       <FooterItem active={pathname === '/userdata'} onClick={() => handleNavigation('/userdata')}>
         <FaCog />
