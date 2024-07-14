@@ -7,7 +7,7 @@ import {
   Image,
   VStack,
 } from "@chakra-ui/react";
-import { FaHeart, FaStar } from "react-icons/fa";
+// import { FaHeart, FaStar } from "react-icons/fa";
 
 interface ProfileCardProps {
   name: string;
@@ -27,16 +27,16 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ name, date, time }) => (
     <VStack align="start" spacing={3} width="100%">
       <HStack justifyContent="space-between" spacing={1} mb={1} width="100%">
         <HStack spacing={1}>
-          {[...Array(5)].map((_, index) => (
-            <Icon key={index} as={FaStar} w={4} h={4} color="black" />
-          ))}
+          {/* {[...Array(5)].map((_, index) => (
+            // <Icon key={index} as={FaStar} w={4} h={4} color="black" />
+          ))} */}
         </HStack>
         <HStack justifyContent="space-between" mt={3} width="10%">
           <Image src="/icons/no_smoking.svg" alt="No Smoking" boxSize="30px" />
           <Image src="/icons/no_pets.svg" alt="No Pets" boxSize="30px" />
           <Image src="/icons/no_eating.svg" alt="No Eating" boxSize="30px" />
         </HStack>
-        <Icon as={FaHeart} w={6} h={6} color="gray.500" />
+        {/* <Icon as={FaHeart} w={6} h={6} color="gray.500" /> */}
       </HStack>
       <Text fontWeight="bold" ml={2}>
         学研北生駒まで

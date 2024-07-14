@@ -94,6 +94,7 @@ export default function Page() {
         await updateDoc(doc(db, "Users", otherUserKey), {
           status: null,
         });
+        router.push("/evaluation");
       } else {
         console.log("出発地から離れています。");
         alert("出発地から離れています。");
@@ -192,6 +193,7 @@ export default function Page() {
               });
             }
             alert("取引をキャンセルしました。");
+            router.push("/postList");
           }}
         >
           取引をキャンセル
@@ -199,6 +201,7 @@ export default function Page() {
       </>
     );
   }
+
   return (
     <Flex align="center" justify="center" height="100vh">
       <VStack spacing={5}>
