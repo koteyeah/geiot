@@ -259,7 +259,7 @@ export default function DriverRegistrationScreen() {
                 <option value="">選択してください</option>
                 <option value="学研北生駒駅">学研北生駒駅</option>
                 <option value="学研奈良登美ヶ丘駅">学研奈良登美ヶ丘駅</option>
-                <option value="UR中富美">UR中富美</option>
+                <option value="UR中登美第三団地">UR中登美第三団地</option>
               </Select>
               <FormErrorMessage>
                 {errors.goal_spot && errors.goal_spot.message}
@@ -278,10 +278,7 @@ export default function DriverRegistrationScreen() {
                 })}
               >
                 <option value="">選択してください</option>
-                <option value="正門前">正門前</option>
-                <option value="サイエンスプラザ駐車場">
-                  サイエンスプラザ駐車場
-                </option>
+                <option value="NAIST正門前">NAIST正門前</option>
               </Select>
               <FormErrorMessage>
                 {errors.start_spot && errors.start_spot.message}
