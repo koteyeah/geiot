@@ -88,11 +88,8 @@ export default function SignUpScreen() {
                     value: 50,
                     message: '50文字以内で入力してください',
                   },
-                  pattern: {
-                    value:
-                      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@naist\.ac\.jp$/,
-                    message: 'メールアドレスの形式が違います',
-                  },
+                  validate: value => 
+                    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@(naist\.ac\.jp|is\.naist\.jp)$/.test(value) || 'メールアドレスの形式が違います',
                 })}
               />
               <FormErrorMessage>
