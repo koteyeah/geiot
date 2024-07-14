@@ -35,7 +35,8 @@ export default function Page() {
   const [userKey, setUserKey] = useState<string>("");
   const [otherUserData, setOtherUser] = useState<DocumentData | null>(null);
   const [otherUserInfo, setOtherUserInfo] = useState<DocumentData | null>(null);
-  const [otherUserDriverInfo, setOtherUserDriverInfo] = useState<DocumentData | null>(null);
+  const [otherUserDriverInfo, setOtherUserDriverInfo] =
+    useState<DocumentData | null>(null);
   const [otherUserKey, setOtherUserKey] = useState<string>("");
   const [ainoriData, setAinori] = useState<DocumentData | null>(null);
   const [ainoriKey, setAinoriKey] = useState<string>("");
@@ -150,21 +151,31 @@ export default function Page() {
                   ainoriData.driver === user.uid ? "ドライバー" : "乗客"
                 );
                 console.log(ainoriData);
-                if (ainoriData.status === "成立" || ainoriData.status === "相乗り中") {
-                  switch (ainoriData.driver === user.uid ? "ドライバー" : "乗客") {
+                if (
+                  ainoriData.status === "成立" ||
+                  ainoriData.status === "相乗り中"
+                ) {
+                  switch (
+                    ainoriData.driver === user.uid ? "ドライバー" : "乗客"
+                  ) {
                     case "ドライバー":
                       const passengerDoc = await getDoc(
                         doc(db, "Users", ainoriData.passenger)
                       );
                       const passengerInfoDoc = await getDoc(
-                        doc(db, "Users", ainoriData.passenger, "Profile", "Info")
+                        doc(
+                          db,
+                          "Users",
+                          ainoriData.passenger,
+                          "Profile",
+                          "Info"
+                        )
                       );
                       if (passengerDoc.exists()) {
                         setOtherUserKey(passengerDoc.id);
                       }
                       if (passengerInfoDoc.exists()) {
                         setOtherUserInfo(passengerInfoDoc.data());
-
                       }
                       break;
                     case "乗客":
@@ -175,7 +186,13 @@ export default function Page() {
                         doc(db, "Users", ainoriData.driver, "Profile", "Info")
                       );
                       const otherDriverInfoDoc = await getDoc(
-                        doc(db, "Users", ainoriData.driver, 'Profile', 'DriverInfo')
+                        doc(
+                          db,
+                          "Users",
+                          ainoriData.driver,
+                          "Profile",
+                          "DriverInfo"
+                        )
                       );
                       if (otherDoc.exists()) {
                         setOtherUserKey(otherDoc.id);
@@ -271,7 +288,6 @@ export default function Page() {
               />
             )}
           </>
-          
         )}
         {status == "成立" && (
           <>
@@ -332,11 +348,11 @@ export default function Page() {
                 <ModalBody>ここに胸を打つメッセージを表示する</ModalBody>
 
                 <ModalFooter>
-                  <Button colorScheme="ghost" mr={3} onClick={onClose}>
+                  <Button colorScheme="blue" mr={3} onClick={onClose}>
                     Close
                   </Button>
                   <Button
-                    variant="blue"
+                    variant="ghost"
                     onClick={async () => {
                       await deleteDoc(doc(db, "ainories", ainoriKey));
                       await updateDoc(doc(db, "Users", userKey), {
