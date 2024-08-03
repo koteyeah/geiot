@@ -27,7 +27,7 @@ const Home: React.FC = () => {
           </Header>
           <ButtonContainer>
             <Button onClick={() => router.push('/signup')}>Sign Up</Button>
-            <Button onClick={() => router.push('/signin')}>Sign In</Button>
+            <SignInButton onClick={() => router.push('/signin')}>Sign In</SignInButton>
           </ButtonContainer>
         </>
       ) : (
@@ -45,7 +45,6 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  padding: 20px;
   background-color: #fff;
 `;
 
@@ -67,9 +66,7 @@ const ButtonContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
   width: 100%;
-  max-width: 300px;
 `;
 
 const Button = styled.button`
@@ -80,15 +77,22 @@ const Button = styled.button`
   border-radius: 5px;
   font-size: 18px;
   cursor: pointer;
-  width: 100%;
+  margin-bottom: 10px;
+  width: 80%;
   text-align: center;
-  box-sizing: border-box;
+  max-width: 300px;
+`;
 
-  &:last-of-type {
-    background-color: transparent;
-    border: 1px solid #38B2AC;
-    color: #38B2AC;
-  }
+const SignInButton = styled.button`
+  border: 1px solid #38B2AC;
+  color: #38B2AC;
+  padding: 15px 30px;
+  border-radius: 5px;
+  font-size: 18px;
+  cursor: pointer;
+  width: 80%;
+  text-align: center;
+  max-width: 300px;
 `;
 
 const ImageWrapper = styled.div`
@@ -103,8 +107,8 @@ const ImageWrapper = styled.div`
 
 const StyledImage = styled(Image)`
   object-fit: contain;
-  width: 100%;
-  height: 100%;
+  width: 200px;
+  height: 200px;
 `;
 
 const Placeholder = styled.div`
