@@ -54,6 +54,7 @@ const Header = styled.div`
   flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
+  margin-top: 50px; /* 追加: 画像を下げるためのマージン */
 `;
 
 const Title = styled.h1`
@@ -122,10 +123,3 @@ const Placeholder = styled.div`
   height: 100vh;
   width: 100vw;
 `;
-
-
-
-
-
-
-
