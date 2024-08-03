@@ -44,7 +44,7 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  height: 100vh;
   background-color: #fff;
   padding-top: 20px;
 `;
@@ -122,3 +122,10 @@ const Placeholder = styled.div`
   height: 100vh;
   width: 100vw;
 `;
+
+
+
+
+
+
+
