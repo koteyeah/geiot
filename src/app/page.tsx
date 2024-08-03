@@ -18,7 +18,7 @@ const Home: React.FC = () => {
   return (
     <Container>
       {imageLoaded ? (
-        <MainContainer>
+        <>
           <Header>
             <ImageWrapper>
               <StyledImage src="/Group.svg" alt="icon" width={200} height={200} priority />
@@ -29,7 +29,7 @@ const Home: React.FC = () => {
             <Button onClick={() => router.push('/signup')}>Sign Up</Button>
             <SignInButton onClick={() => router.push('/signin')}>Sign In</SignInButton>
           </ButtonContainer>
-        </MainContainer>
+        </>
       ) : (
         <Placeholder>Loading...</Placeholder>
       )}
@@ -41,17 +41,12 @@ export default Home;
 
 const Container = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
   background-color: #fff;
-`;
-
-const MainContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  padding-top: 20px;
 `;
 
 const Header = styled.div`
@@ -59,6 +54,7 @@ const Header = styled.div`
   flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
+  margin-top: 50px; /* 追加: 画像を下げるためのマージン */
 `;
 
 const Title = styled.h1`
