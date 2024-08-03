@@ -25,8 +25,10 @@ const Home: React.FC = () => {
             </ImageWrapper>
             <Title>ainori</Title>
           </Header>
-          <Button onClick={() => router.push('/signup')}>Sign Up</Button>
-          <SignInButton onClick={() => router.push('/signin')}>Sign In</SignInButton>
+          <ButtonContainer>
+            <Button onClick={() => router.push('/signup')}>Sign Up</Button>
+            <Button onClick={() => router.push('/signin')}>Sign In</Button>
+          </ButtonContainer>
         </>
       ) : (
         <Placeholder>Loading...</Placeholder>
@@ -43,7 +45,7 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  padding-top: 20px;
+  padding: 20px;
   background-color: #fff;
 `;
 
@@ -61,6 +63,15 @@ const Title = styled.h1`
   margin: 0;
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+`;
+
 const Button = styled.button`
   background-color: #38B2AC;
   color: #fff;
@@ -69,22 +80,15 @@ const Button = styled.button`
   border-radius: 5px;
   font-size: 18px;
   cursor: pointer;
-  margin-bottom: 10px;
-  width: 80%;
+  width: 100%;
   text-align: center;
-  max-width: 300px;
-`;
+  box-sizing: border-box;
 
-const SignInButton = styled.button`
-  border: 1px solid #38B2AC;
-  color: #38B2AC;
-  padding: 15px 30px;
-  border-radius: 5px;
-  font-size: 18px;
-  cursor: pointer;
-  width: 80%;
-  text-align: center;
-  max-width: 300px;
+  &:last-of-type {
+    background-color: transparent;
+    border: 1px solid #38B2AC;
+    color: #38B2AC;
+  }
 `;
 
 const ImageWrapper = styled.div`
@@ -99,8 +103,8 @@ const ImageWrapper = styled.div`
 
 const StyledImage = styled(Image)`
   object-fit: contain;
-  width: 200px;
-  height: 200px;
+  width: 100%;
+  height: 100%;
 `;
 
 const Placeholder = styled.div`
