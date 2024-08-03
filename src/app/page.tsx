@@ -44,8 +44,9 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #fff;
+  padding-top: 20px;
 `;
 
 const Header = styled.div`
