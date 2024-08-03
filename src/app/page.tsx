@@ -18,7 +18,7 @@ const Home: React.FC = () => {
   return (
     <Container>
       {imageLoaded ? (
-        <Content>
+        <MainContainer>
           <Header>
             <ImageWrapper>
               <StyledImage src="/Group.svg" alt="icon" width={200} height={200} priority />
@@ -29,7 +29,7 @@ const Home: React.FC = () => {
             <Button onClick={() => router.push('/signup')}>Sign Up</Button>
             <SignInButton onClick={() => router.push('/signin')}>Sign In</SignInButton>
           </ButtonContainer>
-        </Content>
+        </MainContainer>
       ) : (
         <Placeholder>Loading...</Placeholder>
       )}
@@ -41,14 +41,13 @@ export default Home;
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
   background-color: #fff;
 `;
 
-const Content = styled.div`
+const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
