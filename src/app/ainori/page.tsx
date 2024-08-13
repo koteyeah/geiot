@@ -305,7 +305,7 @@ export default function Page() {
             ) : (
               <>
                 <Text>ドライバーと合流したら乗車するを押してください。</Text>
-                <Button onClick={handleRideButton}>乗車する</Button>
+                <Button colorScheme="teal" onClick={handleRideButton}>乗車する</Button>
               </>
             )}
           </>
@@ -325,7 +325,7 @@ export default function Page() {
             ) : (
               <>
                 <Text>目的地に到着したら降車するを押してください</Text>
-                <Button onClick={handleGetOffButton}>降車する</Button>
+                <Button colorScheme="teal" onClick={handleGetOffButton}>降車する</Button>
               </>
             )}
           </>
