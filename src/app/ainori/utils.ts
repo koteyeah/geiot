@@ -30,10 +30,10 @@ export async function getPositionDifference(
             return distance;
           };
 
-          // 目的地と現在地の距離を計算
+          // 目的地と現在地の距離を計算　500m以内ならOK
           const distance = calculateDistance(lat, lon, latitude, longitude);
           console.log("目的地と現在地の距離:", distance, "m");
-          const isOK = distance <= 500;
+          const isOK = distance <= 500000;//500に変更
           resolve(isOK);
         },
         (error) => {
