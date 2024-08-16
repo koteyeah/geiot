@@ -113,7 +113,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, isSubmitting, userStatus, han
                                             <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
                                                 集合場所: {post.start_spot}
                                             </Text>
-                                            <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
+                                            <Text sx={{fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold', wordBreak: 'break-all' }}>
                                                 備考:{post.remarks}
                                             </Text>
                                         </Box>

@@ -83,7 +83,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ ainoriData, ainoriKey, otherU
                           <Text sx={{ fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
                             集合場所: {ainoriData.start_spot}
                           </Text>
-                          <Text sx={{ fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold' }}>
+                          <Text sx={{ fontSize: windowWidth <= 600 ? 'xs' : 'xl', fontWeight: 'bold', wordBreak: 'break-all' }}>
                             備考: {ainoriData.remarks}
                           </Text>
                         </>
