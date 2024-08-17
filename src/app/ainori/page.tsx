@@ -79,22 +79,22 @@ export default function Page() {
   const handleGetOffButton = async () => {
     if (isProcessing) return; // 処理中であれば何もしない
     isProcessing = true; // フラグを立てる
-    let destinationLat = 0;
-    let destinationLon = 0;
-    switch (ainoriData!.goal_spot) {
-      case "学研北生駒駅":
-        destinationLat = 34.7249652;
-        destinationLon = 135.7233898;
-        break;
-      case "学研奈良登美ヶ丘駅":
-        destinationLat = 34.7265719;
-        destinationLon = 135.752466;
-        break;
-      case "UR中登美第三団地":
-        destinationLat = 34.7167044;
-        destinationLon = 135.7444945;
-        break;
-    }
+    let destinationLat = 34.731922;
+    let destinationLon = 135.73168;
+    // switch (ainoriData!.goal_spot) {
+    //   case "学研北生駒駅":
+    //     destinationLat = 34.7249652;
+    //     destinationLon = 135.7233898;
+    //     break;
+    //   case "学研奈良登美ヶ丘駅":
+    //     destinationLat = 34.7265719;
+    //     destinationLon = 135.752466;
+    //     break;
+    //   case "UR中登美第三団地":
+    //     destinationLat = 34.7167044;
+    //     destinationLon = 135.7444945;
+    //     break;
+    // }
     console.log(destinationLat, destinationLon);
     try {
       const isNear = await getPositionDifference(
