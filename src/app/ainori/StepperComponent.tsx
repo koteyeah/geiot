@@ -60,7 +60,7 @@ const StepperComponent: React.FC<StepperComponentProps> = ({
 
           <Box flexShrink="0">
             <StepTitle>{step.title}</StepTitle>
-            <StepDescription>{step.description}</StepDescription>
+            <Text fontSize="xs">{step.description}</Text>
           </Box>
 
           <StepSeparator />
